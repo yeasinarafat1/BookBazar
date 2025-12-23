@@ -6,26 +6,16 @@ import { Search, PlusCircle, User, Home, Menu, X, BookOpen, LogIn, Shield, LogOu
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-
-// Dummy auth data
-const DUMMY_USER = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  isAdmin: true, // Set to true to see admin menu
-};
+import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/nextjs';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   
-  // Dummy auth hook replacement
-  const user = DUMMY_USER; // Set to null to see signed out state
-  const isAdmin = DUMMY_USER?.isAdmin || false;
-  const signOut = () => {
-    console.log('Sign out clicked');
-    // Add your sign out logic here
-  };
+  // Check if user is admin (you can store this in Clerk metadata)
+  const isAdmin = user?.publicMetadata?.role === 'admin';
   
   const navItems = [
     { href: '/', label: 'Home', icon: Home },
@@ -34,6 +24,10 @@ export function Header() {
     { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: '/profile', label: 'Profile', icon: User },
   ];
+
+  const handleSignOut = () => {
+    signOut();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-lg">
@@ -51,7 +45,7 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} >
+            <Link key={item.href} href={item.href}>
               <Button
                 variant="ghost"
                 className={cn(
@@ -82,27 +76,26 @@ export function Header() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          {user ? (
-            <>
-              <Link href="/sell">
-                <Button variant="hero" className="gap-2 shadow-md cursor-pointer">
-                  <PlusCircle className="h-4 w-4" />
-                  Sell Book
-                </Button>
-              </Link>
-              <Button variant="outline" size="sm" onClick={signOut} className="font-medium cursor-pointer">
-                <LogOut className="h-4 w-4" />
-                Sign Out
+          <SignedIn>
+            <Link href="/sell">
+              <Button variant="hero" className="gap-2 shadow-md cursor-pointer">
+                <PlusCircle className="h-4 w-4" />
+                Sell Book
               </Button>
-            </>
-          ) : (
-            <Link href="/auth">
+            </Link>
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="font-medium cursor-pointer">
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          </SignedIn>
+          <SignedOut>
+            <Link href="/sign-in">
               <Button variant="hero" className="gap-2 shadow-md cursor-pointer">
                 <LogIn className="h-4 w-4" />
                 Sign In
               </Button>
             </Link>
-          )}
+          </SignedOut>
         </div>
 
         {/* Mobile Menu Button */}
@@ -149,27 +142,26 @@ export function Header() {
                 </Button>
               </Link>
             )}
-            {user ? (
-              <>
-                <Link href="/sell" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="hero" className="w-full gap-2 mt-2">
-                    <PlusCircle className="h-5 w-5" />
-                    Sell Your Book
-                  </Button>
-                </Link>
-                <Button variant="outline" className="w-full gap-2 mt-2" onClick={() => { signOut(); setMobileMenuOpen(false); }}>
-                  <LogOut className="h-5 w-5" />
-                  Sign Out
+            <SignedIn>
+              <Link href="/sell" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="hero" className="w-full gap-2 mt-2">
+                  <PlusCircle className="h-5 w-5" />
+                  Sell Your Book
                 </Button>
-              </>
-            ) : (
-              <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+              </Link>
+              <Button variant="outline" className="w-full gap-2 mt-2" onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}>
+                <LogOut className="h-5 w-5" />
+                Sign Out
+              </Button>
+            </SignedIn>
+            <SignedOut>
+              <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="hero" className="w-full gap-2 mt-2">
                   <LogIn className="h-5 w-5" />
                   Sign In
                 </Button>
               </Link>
-            )}
+            </SignedOut>
           </nav>
         </div>
       )}
