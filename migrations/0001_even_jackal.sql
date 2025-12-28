@@ -1,0 +1,1 @@
+ALTER TABLE "users_table" ALTER COLUMN "profile_verification_status" SET NOT NULL;

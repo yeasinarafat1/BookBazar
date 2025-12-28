@@ -7,15 +7,17 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SignedIn, SignedOut, useUser, useClerk } from '@clerk/nextjs';
+import { useCurrentUser } from '@/lib/hook/user';
 
-export function Header() {
+
+export  function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user } = useCurrentUser();
   const { signOut } = useClerk();
   
   // Check if user is admin (you can store this in Clerk metadata)
-  const isAdmin = user?.publicMetadata?.role === 'admin';
+  const isAdmin = user?.role === 'admin';
   
   const navItems = [
     { href: '/', label: 'Home', icon: Home },

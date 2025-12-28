@@ -8,6 +8,13 @@
       "when": 1766843220133,
       "tag": "0000_sudden_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766901677308,
+      "tag": "0001_even_jackal",
+      "breakpoints": true
     }
   ]
 }

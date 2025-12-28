@@ -13,7 +13,7 @@ export const usersTable = pgTable('users_table', {
   role: text('role').notNull().default('user'), 
   
   // CHANGED: Enum -> Text
-  verification_status: text('profile_verification_status').default('unverified'),
+  verification_status: text('profile_verification_status').default('unverified').notNull(),
   
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
