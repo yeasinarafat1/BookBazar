@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,25 +9,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { 
   User, Upload, FileText, Camera, Loader2, 
-  CheckCircle, AlertCircle, ArrowLeft
+  CheckCircle, AlertCircle, ArrowLeft, Clock, XCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { departments, semesters, shifts } from "@/constants"
 import { ProfileFormData, ProfileVerificationProps } from "@/types"
 import Link from "next/link"
 
+// --- SERVER ACTIONS ---
+import { uploadImage } from "@/lib/action/upload"
+import { newVerficationRequest, getVerificationRequest } from "@/lib/action/admin" 
+import { VerificationStatus } from "@/components/verification-status"
+
 export default function ProfileVerification({
   initialData,
-  existingAvatar,
-  verificationStatus,
-  onSubmit
+  existingAvatar
 }: ProfileVerificationProps) {
   const router = useRouter()
   const { toast } = useToast()
 
   const [loading, setLoading] = useState(false)
+  const [checkingStatus, setCheckingStatus] = useState(true)
+  const [currentRequest, setCurrentRequest] = useState<any>(null)
   
-  // Profile data
+  // Profile data state
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [documentFile, setDocumentFile] = useState<File | null>(null)
@@ -43,15 +48,28 @@ export default function ProfileVerification({
     phone: initialData?.phone || "",
   })
 
+  // 1. Fetch Existing Request on Mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const request = await getVerificationRequest();
+        if (request) {
+          setCurrentRequest(request);
+        }
+      } catch (error) {
+        console.error("Failed to check status", error);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+    checkStatus();
+  }, []);
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast({ 
-          title: "File too large", 
-          description: "Avatar must be under 2MB", 
-          variant: "destructive" 
-        })
+        toast({ title: "File too large", description: "Avatar must be under 2MB", variant: "destructive" })
         return
       }
       setAvatarFile(file)
@@ -63,11 +81,7 @@ export default function ProfileVerification({
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast({ 
-          title: "File too large", 
-          description: "Document must be under 5MB", 
-          variant: "destructive" 
-        })
+        toast({ title: "File too large", description: "Document must be under 5MB", variant: "destructive" })
         return
       }
       setDocumentFile(file)
@@ -82,54 +96,91 @@ export default function ProfileVerification({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validation
     if (!formData.roll_number || !formData.registration_number || 
         !formData.department || !formData.shift || !formData.semester) {
-      toast({ 
-        title: "Missing fields", 
-        description: "Please fill in all required fields", 
-        variant: "destructive" 
-      })
+      toast({ title: "Missing fields", description: "Please fill in all required fields", variant: "destructive" })
       return
     }
 
-    if (!documentFile && verificationStatus !== "approved") {
-      toast({ 
-        title: "Document required", 
-        description: "Please upload your student ID or registration card", 
-        variant: "destructive" 
-      })
+    if (!documentFile) {
+      toast({ title: "Document required", description: "Please upload your student ID", variant: "destructive" })
       return
     }
 
     setLoading(true)
 
     try {
-      await onSubmit({
-        formData,
-        avatarFile,
-        documentFile
-      })
+      let finalAvatarUrl = existingAvatar; 
+      if (avatarFile) {
+        const res = await uploadImage(changeToFormData(avatarFile));
+        if (res?.url) finalAvatarUrl = res.url;
+      }
 
-      toast({ 
-        title: "Submitted!", 
-        description: "Your verification request has been submitted for review." 
-      })
+      let finalDocumentUrl = ""; 
+      if (documentFile) {
+        const res = await uploadImage(changeToFormData(documentFile));
+        if (res?.url) finalDocumentUrl = res.url;
+      }
+
+      const submissionData = {
+          ...formData,
+          avatarUrl: finalAvatarUrl,
+          documentUrl: finalDocumentUrl
+      };
+
+      await newVerficationRequest(submissionData);
+
+      toast({ title: "Submitted!", description: "Request sent successfully." })
       
-      // Optional: Navigate after success
-      // router.push("/profile")
+      // Refresh status locally instead of page reload
+      const updatedRequest = await getVerificationRequest();
+      setCurrentRequest(updatedRequest);
+      
     } catch (error: any) {
       console.error("Error:", error)
-      toast({ 
-        title: "Error", 
-        description: error.message || "Something went wrong", 
-        variant: "destructive" 
-      })
+      toast({ title: "Error", description: error.message || "Something went wrong", variant: "destructive" })
     } finally {
       setLoading(false)
     }
   }
 
+  // Helper for upload
+  const changeToFormData = (file: File) => {
+    const data = new FormData();
+    data.append("file", file);
+    return data;
+  }
+
+  const handleResubmit = () => {
+    // Clear the current request view to show the form again
+    // You might want to pre-fill the form with old data here if desired
+    setCurrentRequest(null); 
+  }
+
+  // --- RENDER HELPERS ---
+
+  if (checkingStatus) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // 2. STATUS VIEW COMPONENT (If request exists)
+  if (currentRequest) {
+    const status = currentRequest.verificationStatus; // 'pending' | 'verified' | 'rejected'
+    
+    return (
+      <VerificationStatus
+        status={status}
+        feedback={currentRequest.adminFeedback || ""}
+        onResubmit={handleResubmit}
+      />
+    )
+  }
+
+  // 3. FORM VIEW (If no request exists or Resubmitting)
   return (
     <section className="min-w-full flex justify-center">
     <div className="container py-6 max-w-2xl">
@@ -145,28 +196,6 @@ export default function ProfileVerification({
         <p className="text-muted-foreground mb-6">
           Complete your profile and upload verification documents to become a verified seller.
         </p>
-
-        {verificationStatus && (
-          <div className={cn(
-            "flex items-center gap-2 p-3 rounded-lg mb-6",
-            verificationStatus === "approved" && "bg-success/10 text-success",
-            verificationStatus === "pending" && "bg-warning/10 text-warning",
-            verificationStatus === "rejected" && "bg-destructive/10 text-destructive"
-          )}>
-            {verificationStatus === "approved" ? (
-              <CheckCircle className="h-5 w-5" />
-            ) : (
-              <AlertCircle className="h-5 w-5" />
-            )}
-            <span className="font-medium capitalize">
-              {verificationStatus === "approved" 
-                ? "Your profile is verified!" 
-                : verificationStatus === "pending" 
-                ? "Verification pending review" 
-                : "Verification was rejected. Please resubmit."}
-            </span>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Profile Picture */}
@@ -341,7 +370,7 @@ export default function ProfileVerification({
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Submit for Verification
+            {loading ? "Uploading & Submitting..." : "Submit for Verification"}
           </Button>
         </form>
       </div>

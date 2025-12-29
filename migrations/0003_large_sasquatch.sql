@@ -1,0 +1,1 @@
+ALTER TABLE "profile_verifiacation_table" ADD COLUMN "phone_no" varchar(15) NOT NULL;

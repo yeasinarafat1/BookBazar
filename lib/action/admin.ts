@@ -2,8 +2,8 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db/drizzle";
-import { usersTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { profileVerificationRequestTable, usersTable } from "@/db/schema";
+import { desc, eq } from "drizzle-orm";
 
 export async function checkIsAdmin() {
   try {
@@ -54,3 +54,112 @@ export const changeUserRole = async (userId: string, newRole: string) => {
     throw new Error("Failed to change user role");
   }
 };
+
+export const newVerficationRequest = async (formData: {
+  avatarUrl: string | null | undefined; // This type is fine
+  documentUrl: string;
+  full_name: string;
+  roll_number: string;
+  registration_number: string;
+  department: string;
+  shift: string;
+  semester: string;
+  phone: string;
+}) => {
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Not logged in");
+  }
+
+  try {
+    await db.insert(profileVerificationRequestTable).values({
+      clerkId: user.id,
+      
+ 
+      profile_pic: formData.avatarUrl || user.imageUrl, 
+      
+      document_pic: formData.documentUrl,
+      name: formData.full_name,
+      rollNo: formData.roll_number,
+      regNo: formData.registration_number,
+      department: formData.department,
+      shift: formData.shift,
+      semester: formData.semester,
+      verificationStatus: 'pending',
+      phoneNo: formData.phone,
+    });
+
+  } catch (error) {
+    console.error("Error creating verification request:", error);
+    throw new Error("Failed to create verification request");
+  }
+}
+export const getVerificationRequest = async () => {
+  const user = await currentUser();
+  
+  if (!user) return null;
+
+  try {
+    // Get the most recent request
+    const request = await db
+      .select()
+      .from(profileVerificationRequestTable)
+      .where(eq(profileVerificationRequestTable.clerkId, user.id))
+      .orderBy(desc(profileVerificationRequestTable.createdAt))
+      .limit(1);
+
+    if (request.length > 0) {
+      return request[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching verification status:", error);
+    return null;
+  }
+};
+export const getAllVerificationRequests = async () => {
+   try {
+    
+    const request = await db
+      .select()
+      .from(profileVerificationRequestTable)
+      .orderBy(desc(profileVerificationRequestTable.createdAt))
+      
+
+    if (request.length > 0) {
+      return request;
+    }
+    
+    return null;
+  }catch(error){
+
+  }
+}
+export const updateVerificationRequestStatus=async (reqId:string, status:"pending"|"verified"|"rejected", adminNotes?:string)=>{
+  try{
+    if(status=="verified"){
+      // On verification, update the user's isVerified status
+      const request = await db
+        .select({ clerkId: profileVerificationRequestTable.clerkId })
+        .from(profileVerificationRequestTable)
+        .where(eq(profileVerificationRequestTable.id, reqId))
+        .limit(1);
+      if(request.length===0) throw new Error("Request not found");
+      const clerkId=request[0].clerkId;
+      const resUser= await db.update(usersTable)
+        .set({ verification_status: status })
+        .where(eq(usersTable.clerkId, clerkId));
+      if(!resUser) throw new Error("Failed to update user verification status");
+    }
+   const res= await db.update(profileVerificationRequestTable)
+          .set({verificationStatus:status,admin_feedback:adminNotes})
+          .where(eq(profileVerificationRequestTable.id,reqId))
+    if(res) return true;
+    else throw new Error()
+  }catch(error){
+    console.error("Error updating verification request status:", error);
+    return false;
+  }
+}

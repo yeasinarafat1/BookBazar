@@ -1,0 +1,2 @@
+ALTER TABLE "profile_verifiacation_table" ADD COLUMN "admin_feedback" varchar(500);--> statement-breakpoint
+ALTER TABLE "profile_verifiacation_table" ADD COLUMN "created_at" timestamp DEFAULT now() NOT NULL;

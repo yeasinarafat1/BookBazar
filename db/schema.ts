@@ -34,8 +34,11 @@ export const profileVerificationRequestTable = pgTable('profile_verifiacation_ta
   rollNo: varchar("roll_no", { length: 6 }).notNull(),
   regNo: varchar("reg_no", { length: 10 }).notNull(),
   semester: varchar("semester", { length: 10 }).notNull(),
-  shift: varchar("shift", { length: 10 }).notNull(),
-  department: varchar("department", { length: 10 }).notNull(),
+  shift: varchar("shift", { length: 100 }).notNull(),
+  department: varchar("department", { length: 100 }).notNull(),
+  phoneNo: varchar("phone_no", { length: 50 }).notNull(),
+  admin_feedback:varchar("admin_feedback", { length: 500 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;
