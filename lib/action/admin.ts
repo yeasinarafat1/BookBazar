@@ -3,7 +3,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db/drizzle";
 import { profileVerificationRequestTable, usersTable } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, ilike, or } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 
 export async function checkIsAdmin() {
   try {
@@ -33,12 +34,28 @@ console.log("DB User Role Check:", dbUser);
     return { isAdmin: false, error: "Database error" };
   }
 }
-export const getAllUsers = async () => {
+export const getAllUsers = async (query?: string) => {
   try {
+    // 2. If a query exists, filter by name OR email
+    if (query) {
+      return await db
+        .select()
+        .from(usersTable)
+        .where(
+          or(
+            // ilike performs a case-insensitive search
+            ilike(usersTable.name, `%${query}%`),
+            ilike(usersTable.email, `%${query}%`)
+          )
+        );
+    }
+
+    // 3. If no query, return all users as before
     const users = await db.select().from(usersTable);
     return users;
+    
   } catch (error) {
-    console.error("Error fetching all users:", error);
+    console.error("Error fetching users:", error);
     throw new Error("Failed to fetch users");
   }
 };
@@ -49,6 +66,7 @@ export const changeUserRole = async (userId: string, newRole: string) => {
       .update(usersTable)
       .set({ role: newRole })
       .where(eq(usersTable.id, userId));
+    revalidatePath('/admin/users'); // Revalidate the users page to reflect changes
   } catch (error) {
     console.error("Error changing user role:", error);
     throw new Error("Failed to change user role");

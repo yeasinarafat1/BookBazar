@@ -20,7 +20,7 @@ console.log(verifiedProfile);
   // Simulate Data Fetching
 
   const isVerified =
-    profile?.verification_status || profile?.verification_status === "approved";
+    profile?.verification_status=== "verified";
   const displayName = profile?.name || "User";
   const displayEmail = profile?.email || "";
   const joinDate = profile?.createdAt
