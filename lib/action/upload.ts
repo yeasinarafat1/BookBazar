@@ -48,3 +48,18 @@ export async function uploadImage(formData: FormData): Promise<UploadResult | nu
     ).end(buffer) // Write the buffer to the stream
   })
 }
+export async function deleteImage(publicId: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy( 
+      publicId,
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary Delete Error:", error);
+          reject(error);
+        } else {
+          resolve(result?.result === "ok");
+        }
+      }
+    );
+  });
+}

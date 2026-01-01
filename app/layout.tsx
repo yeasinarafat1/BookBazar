@@ -5,6 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/Headers";
 import { BottomNav } from "@/components/BottomNav";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ToastProvider } from "@radix-ui/react-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +50,7 @@ export default function RootLayout({
           </div>
         </body>
       </html>
+      <Toaster />
     </ClerkProvider>
   );
 }

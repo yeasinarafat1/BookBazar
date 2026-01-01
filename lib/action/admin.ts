@@ -3,8 +3,11 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db/drizzle";
 import { profileVerificationRequestTable, usersTable } from "@/db/schema";
-import { desc, eq, ilike, or } from "drizzle-orm";
+import { count, desc, eq, ilike, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { deleteImage } from "./upload";
+import { get } from "http";
+import { getPublicIdFromUrl } from "../utils";
 
 export async function checkIsAdmin() {
   try {
@@ -181,3 +184,90 @@ export const updateVerificationRequestStatus=async (reqId:string, status:"pendin
     return false;
   }
 }
+
+
+export const getUserAndVerfiedUserCount = async () => {
+  try {
+    const userPromise = db
+      .select({ count: count() })
+      .from(usersTable);
+
+    const verifiedUserPromise = db
+      .select({ count: count() })
+      .from(usersTable)
+      .where(eq(usersTable.verification_status, "verified"));
+
+    const [userCount, verifiedUserCount] = await Promise.all([
+      userPromise,
+      verifiedUserPromise,
+    ]);
+
+    return {
+      userCount: userCount[0].count,
+      verifiedUserCount: verifiedUserCount[0].count,
+    };
+  } catch (error) {
+    console.error("Error fetching user and verified user counts:", error);
+    throw new Error("Failed to fetch user and verified user counts");
+  }
+};
+export const getPendingVerificationCount = async () => {
+  try {
+    const pendingVerificationCount = await db
+      .select({ count: count() })
+      .from(profileVerificationRequestTable)
+      .where(eq(profileVerificationRequestTable.verificationStatus, "pending"));
+
+    return pendingVerificationCount[0].count;
+  } catch (error) {
+    console.error("Error fetching pending verification count:", error);
+    throw new Error("Failed to fetch pending verification count");
+  }
+};
+
+export const deleteVerificationRequest = async (reqId: string) => {
+  try {
+    await db
+      .delete(profileVerificationRequestTable)
+      .where(eq(profileVerificationRequestTable.id, reqId));
+  } catch (error) {
+    console.error("Error deleting verification request:", error);
+    throw new Error("Failed to delete verification request");
+  }
+};
+export const reSubmitVerificationRequest = async (reqId: string) => {
+  try {
+    // FIX 1: Use db.select() instead of db.query() to avoid schema errors
+    const requests = await db
+      .select()
+      .from(profileVerificationRequestTable)
+      .where(eq(profileVerificationRequestTable.id, reqId))
+      .limit(1);
+
+    const request = requests[0];
+
+    if (request) {
+      // FIX 2: Check for null BEFORE calling deleteImage
+      
+      // Handle Profile Picture
+      const profilePicId = getPublicIdFromUrl(request.profile_pic || "");
+      if (profilePicId) {
+        await deleteImage(profilePicId);
+      }
+
+      // Handle Document Picture
+      const docPicId = getPublicIdFromUrl(request.document_pic || "");
+      if (docPicId) {
+        await deleteImage(docPicId);
+      }
+      
+      // Finally, delete the request from the database
+      await deleteVerificationRequest(reqId);
+      
+      revalidatePath('/profile/verify');
+    }
+  } catch (error) {
+    console.error("Error resubmitting verification request:", error);
+    throw new Error("Failed to resubmit verification request");
+  }
+};

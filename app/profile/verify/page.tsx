@@ -18,8 +18,9 @@ import Link from "next/link"
 
 // --- SERVER ACTIONS ---
 import { uploadImage } from "@/lib/action/upload"
-import { newVerficationRequest, getVerificationRequest } from "@/lib/action/admin" 
+import { newVerficationRequest, getVerificationRequest, reSubmitVerificationRequest } from "@/lib/action/admin" 
 import { VerificationStatus } from "@/components/verification-status"
+import { VerificationRequest } from "@/db/schema"
 
 export default function ProfileVerification({
   initialData,
@@ -30,7 +31,7 @@ export default function ProfileVerification({
 
   const [loading, setLoading] = useState(false)
   const [checkingStatus, setCheckingStatus] = useState(true)
-  const [currentRequest, setCurrentRequest] = useState<any>(null)
+  const [currentRequest, setCurrentRequest] = useState<VerificationRequest | null>(null)
   
   // Profile data state
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -151,13 +152,38 @@ export default function ProfileVerification({
     return data;
   }
 
-  const handleResubmit = () => {
-    // Clear the current request view to show the form again
-    // You might want to pre-fill the form with old data here if desired
-    setCurrentRequest(null); 
+const handleResubmit = async () => {
+    if (!currentRequest?.id) return;
+
+    try {
+      setLoading(true); // Optional: Show loading state during deletion
+      
+      // 1. Call Server Action to delete
+      await reSubmitVerificationRequest(currentRequest.id);
+      
+      // 2. IMMEDIATE UI UPDATE: Clear the local request state
+      // This forces the component to render the Form View immediately
+      setCurrentRequest(null); 
+      
+      // 3. Clear any preview images from the previous request if needed
+      // (Optional, depending on if you want them to persist or not)
+      // setDocumentPreview(null);
+      // setDocumentFile(null);
+
+      // 4. Sync Next.js router cache
+      router.refresh(); 
+      
+      toast({ title: "Ready to resubmit", description: "Please fill out the form again." });
+
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error", description: "Failed to reset form", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // --- RENDER HELPERS ---
+
 
   if (checkingStatus) {
     return (
@@ -173,8 +199,8 @@ export default function ProfileVerification({
     
     return (
       <VerificationStatus
-        status={status}
-        feedback={currentRequest.adminFeedback || ""}
+        status={status as "pending" | "verified" | "rejected"}
+        feedback={currentRequest.admin_feedback || ""}
         onResubmit={handleResubmit}
       />
     )

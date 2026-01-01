@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, FileCheck, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { mockUsers, mockBooks, mockVerifications } from "@/constants";
+import { getPendingVerificationCount, getUserAndVerfiedUserCount } from "@/lib/action/admin";
 
-export default function AdminOverviewPage() {
-  // Calculate Stats
+export default async function AdminOverviewPage() {
+  const {userCount, verifiedUserCount} =await getUserAndVerfiedUserCount();
+  const pendingVerificationCount = await getPendingVerificationCount();
   const stats = {
     totalUsers: mockUsers.length,
     verifiedUsers: mockUsers.filter((p) => p.is_verified).length,
@@ -14,12 +16,12 @@ export default function AdminOverviewPage() {
   };
 
   const statCards = [
-    { title: "Total Users", value: stats.totalUsers, icon: Users, color: "text-blue-500", bgColor: "bg-blue-500/10" },
-    { title: "Verified Users", value: stats.verifiedUsers, icon: CheckCircle, color: "text-green-500", bgColor: "bg-green-500/10" },
+    { title: "Total Users", value: userCount, icon: Users, color: "text-blue-500", bgColor: "bg-blue-500/10" },
+    { title: "Verified Users", value: verifiedUserCount, icon: CheckCircle, color: "text-green-500", bgColor: "bg-green-500/10" },
     { title: "Total Books", value: stats.totalBooks, icon: BookOpen, color: "text-purple-500", bgColor: "bg-purple-500/10" },
     { title: "Pending Books", value: stats.pendingBooks, icon: Clock, color: "text-orange-500", bgColor: "bg-orange-500/10" },
     { title: "Approved Books", value: stats.approvedBooks, icon: TrendingUp, color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
-    { title: "Pending Verifications", value: stats.pendingVerifications, icon: FileCheck, color: "text-amber-500", bgColor: "bg-amber-500/10" },
+    { title: "Pending Verifications", value: pendingVerificationCount, icon: FileCheck, color: "text-amber-500", bgColor: "bg-amber-500/10" },
   ];
 
   return (
