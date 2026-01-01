@@ -1,3 +1,5 @@
+
+
 export const departments = [
   "Computer Science",
   "Electrical Engineering",
@@ -152,3 +154,4 @@ export const mockVerifications: VerificationDocument[] = [
     profile: mockUsers[0]
   }
 ];
+

@@ -156,6 +156,7 @@ export  function Header() {
                 Sign Out
               </Button>
             </SignedIn>
+            
             <SignedOut>
               <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="hero" className="w-full gap-2 mt-2">

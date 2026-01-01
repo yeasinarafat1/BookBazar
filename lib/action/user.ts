@@ -2,8 +2,8 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db/drizzle";
-import { usersTable } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { profileVerificationRequestTable, usersTable } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 
 export async function getLoggedInUser() {
   try {
@@ -35,3 +35,22 @@ export async function getLoggedInUser() {
     return { isAuthenticated: false, user: null, error: "Database error" };
   }
 }
+export const verifiedUserData = async (clerk_id: string, isVerified: boolean) => {
+  if (!isVerified) {
+    return null;
+  }
+
+  const userData = await db
+    .select()
+    .from(profileVerificationRequestTable)
+    .where(
+      and(
+        eq(profileVerificationRequestTable.clerkId, clerk_id),
+        eq(profileVerificationRequestTable.verificationStatus, "verified")
+      )
+    )
+    .limit(1);
+
+  // Cleaner return logic
+  return userData.length > 0 ? userData[0] : null;
+};
