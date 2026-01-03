@@ -1,6 +1,9 @@
+import { getAllBooks } from "@/lib/action/book";
 import BooksClient from "./client";
 import { mockBooks } from "@/constants";
 
-export default function BooksPage() {
-  return <BooksClient initialBooks={mockBooks} />;
+export default async function BooksPage() {
+  const books = await getAllBooks();
+  console.log("Fetched books:", books);
+  return <BooksClient books={books} />;
 }
