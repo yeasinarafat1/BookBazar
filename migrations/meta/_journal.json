@@ -43,6 +43,34 @@
       "when": 1767431895348,
       "tag": "0005_handy_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767626231857,
+      "tag": "0006_married_boom_boom",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1767626578691,
+      "tag": "0007_lovely_vanisher",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1767787539119,
+      "tag": "0008_rich_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1767787607671,
+      "tag": "0009_damp_white_tiger",
+      "breakpoints": true
     }
   ]
 }

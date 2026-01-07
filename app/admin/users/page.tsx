@@ -1,7 +1,6 @@
 import { getAllUsers } from "@/lib/action/admin";
-import { User } from "@/db/schema";
-import SearchInput from "./__component/SearchInput"; // Use your existing SearchInput
-import UserActions from "./__component/UserAction"; // Import the client component above
+import { User } from "@/db/Schemas/user"; 
+import UserActions from "./__component/UserAction"; 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,33 +11,111 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Shield, CheckCircle, XCircle, User as UserIcon } from "lucide-react";
+import { Shield, CheckCircle, XCircle, User as UserIcon, Users } from "lucide-react";
+import Header from "../__component/Header";
+import SearchFilter from "../__component/SearchFilter";
+import StatsSection from "../__component/StatsSection";
+
+// Helper to filter users in memory
+const filterUsers = (users: User[], query: string, status: string) => {
+  let filtered = users;
+
+  // 1. Filter by Search Query
+  if (query) {
+    const lowerQuery = query.toLowerCase();
+    filtered = filtered.filter((user) =>
+      (user.name && user.name.toLowerCase().includes(lowerQuery)) ||
+      (user.email && user.email.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  // 2. Filter by Status (Mixed logic: Role vs Verification Status)
+  if (status && status !== 'all') {
+    if (status === 'admin') {
+      filtered = filtered.filter(u => u.role === 'admin');
+    } else if (status === 'verified') {
+      filtered = filtered.filter(u => u.verification_status === 'verified');
+    } else if (status === 'unverified') {
+      filtered = filtered.filter(u => u.verification_status === 'unverified');
+    }
+  }
+
+  return filtered;
+};
 
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>;
+  searchParams: Promise<{ search?: string; status?: string }>;
 }) {
-  // 1. Await params in Next.js 15+
   const params = await searchParams;
   const query = params.search || "";
+  const statusFilter = params.status || "all";
 
-  // 2. Fetch data (Server Side Filtering)
-  // Ensure getAllUsers performs the filtering: .where(ilike(users.name, `%${query}%`))
-  const users: User[] = await getAllUsers(query );
+  // 1. Fetch ALL users
+  const allUsers = await getAllUsers(); 
+
+  // 2. Calculate Stats
+  const total = allUsers.length;
+  const admins = allUsers.filter(u => u.role === 'admin').length;
+  const verified = allUsers.filter(u => u.verification_status === 'verified').length;
+  const unverified = allUsers.filter(u => u.verification_status === 'unverified').length;
+
+  // 3. Configure Stats Items
+  const statsItems = [
+    { 
+      title: "Total Users", 
+      count: total, 
+      Icon: Users, 
+      variant: "default" as const 
+    },
+    { 
+      title: "Admins", 
+      count: admins, 
+      Icon: Shield, 
+      variant: "pending" as const // Amber color
+    },
+    { 
+      title: "Verified", 
+      count: verified, 
+      Icon: CheckCircle, 
+      variant: "approved" as const 
+    },
+    { 
+      title: "Unverified", 
+      count: unverified, 
+      Icon: XCircle, 
+      variant: "rejected" as const 
+    },
+  ];
+
+  // 4. Define Status Options for the Dropdown
+  const statusOptions = [
+    { value: "all", label: "All Status" },
+    { value: "admin", label: "Admin" },
+    { value: "verified", label: "Verified" },
+    { value: "unverified", label: "Unverified" },
+  ];
+
+  // 5. Filter data for the Table View
+  const filteredUsers = filterUsers(allUsers, query, statusFilter);
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">User Management</h2>
-          <p className="text-muted-foreground">Manage roles and verification status</p>
-        </div>
-        <SearchInput />
+      {/* Header & Stats */}
+      <div className="space-y-4">
+        <Header 
+            title="User Management" 
+            subtitle="Manage roles and verification status" 
+        />
+        
+        <StatsSection items={statsItems} />
+        
+        {/* Pass status options to the reusable filter */}
+        <SearchFilter status={statusOptions} />
       </div>
 
-      {/* Table Section - Rendered on Server */}
+      {/* Table Section */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -51,14 +128,14 @@ export default async function UsersPage({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                    No users found
+                    No users found matching your filters
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     {/* User Info */}
                     <TableCell>
