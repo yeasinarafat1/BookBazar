@@ -8,6 +8,7 @@ import { User, Star, Calendar, BookOpen, Package, Shield } from "lucide-react";
 import ProfileOverView from "./__components/ProfileOverView";
 import Menu from "./__components/Menu";
 import { getLoggedInUser, verifiedUserData } from "@/lib/action/user";
+import { getUserBook } from "@/lib/action/book";
 
 
 
@@ -15,9 +16,9 @@ const Profile = async () => {
   const req = await getLoggedInUser();
   const profile = req?.user;
   const verifiedProfile = await verifiedUserData(profile?.clerkId || "", profile?.verification_status === "verified");
-console.log(verifiedProfile);
 
-  // Simulate Data Fetching
+
+  const userListedBooks = await getUserBook(profile?.clerkId || "") || [];
 
   const isVerified =
     profile?.verification_status=== "verified";
@@ -91,7 +92,7 @@ console.log(verifiedProfile);
                     className="mt-2 cursor-pointer hover:bg-muted"
                   >
                     <Shield className="h-3 w-3 mr-1" />
-                    {profile?.verification_status === "pending"
+                    {profile?.verification_status === "unverified"
                       ? "Verification Pending"
                       : "Verify your account"}
                   </Badge>
@@ -132,7 +133,7 @@ console.log(verifiedProfile);
           </Link>
         </div>
 
-        <ProfileOverView />
+        <ProfileOverView userListedBook={userListedBooks}/>
         <Menu />
       </main>
     </div>

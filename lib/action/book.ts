@@ -107,3 +107,29 @@ export const updateBookStatus = async (bookId: string, newStatus: string) => {
     throw new Error("Failed to update book status");
   }
 };
+export const getUserBook = async (userId: string) => {
+  try {
+    const books = await db
+      .select()
+      .from(booksTable)
+      .where(eq(booksTable.sellerId, userId));
+    return books;
+  } catch (error) {
+    console.error("Error fetching user's books:", error);
+    throw new Error("Failed to fetch user's books");
+  }
+};
+
+export const getBookById = async (bookId: string) => {
+  try {
+    const book = await db
+      .select()
+      .from(booksTable)
+      .where(eq(booksTable.id, bookId));
+      
+    return book[0] || null;
+  } catch (error) {
+    // If the query fails (e.g., invalid ID format), we treat it as "not found"
+    return null; 
+  }
+};

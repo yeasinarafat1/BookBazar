@@ -10,16 +10,19 @@ import { BookCard } from "@/components/BookCard";
 import { mockBooks } from "@/data/mockBooks";
 import { cn } from "@/lib/utils";
 import { TabType } from "@/types"; // Ensure this type exists or use string
+import { Book } from "@/db/Schemas/book";
 
-const ProfileOverView = () => {
-
+const ProfileOverView = ({userListedBook}:{
+  userListedBook?:Book[];
+}) => {
+  console.log(userListedBook);
   const [activeTab, setActiveTab] = useState<TabType>('listings');
 
 
-  const userListings = mockBooks.slice(0, 3);
-  const soldBooks = mockBooks.slice(3, 5);
-  const purchasedBooks = mockBooks.slice(5, 8);
-  const savedBooks = mockBooks.slice(8, 10);
+  const userListings = userListedBook?.slice(0, 3) || [];
+  const soldBooks = userListedBook?.slice(3, 5) || [];
+  const purchasedBooks = userListedBook?.slice(5, 8) || [];
+  const savedBooks = userListedBook?.slice(8, 10) || [];
 
 
   const tabs = [

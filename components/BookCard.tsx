@@ -1,11 +1,12 @@
 
-import { Book, BookCondition } from '@/types';
+import {  BookCondition } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { conditionLabels } from '@/data/mockBooks';
 import { MapPin, Eye, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import Link from 'next/link';
+import { Book } from '@/db/Schemas/book';
 
 interface BookCardProps {
   book: Book;
@@ -23,8 +24,8 @@ export function BookCard({ book, className }: BookCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  const discount = book.originalPrice 
-    ? Math.round((1 - book.price / book.originalPrice) * 100) 
+  const discount = book.price 
+    ? Math.round((1 - book.price / book.price) * 100)
     : 0;
 
   return (
@@ -73,8 +74,8 @@ export function BookCard({ book, className }: BookCardProps) {
         
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          <Badge variant={conditionVariants[book.condition]}>
-            {conditionLabels[book.condition]}
+          <Badge variant={conditionVariants[book.condition as BookCondition]} className="font-bold">
+            {conditionLabels[book.condition as BookCondition]}
           </Badge>
           {discount > 0 && (
             <Badge variant="accent" className="font-bold">
@@ -84,7 +85,7 @@ export function BookCard({ book, className }: BookCardProps) {
         </div>
         
         {/* Featured Badge */}
-        {book.isFeatured && (
+        {true && (
           <div className="absolute bottom-3 left-3">
             <Badge variant="default" className="bg-primary/90 backdrop-blur-sm">
               Featured
@@ -110,9 +111,9 @@ export function BookCard({ book, className }: BookCardProps) {
           <span className="text-lg font-bold text-primary">
             ৳{book.price}
           </span>
-          {book.originalPrice && (
+          {book.price && (
             <span className="text-sm text-muted-foreground line-through">
-              ৳{book.originalPrice}
+              ৳{book.price}
             </span>
           )}
         </div>
@@ -125,7 +126,7 @@ export function BookCard({ book, className }: BookCardProps) {
           </span>
           <span className="flex items-center gap-1">
             <Eye className="h-3 w-3" />
-            {book.views}
+            {100}
           </span>
         </div>
       </div>
