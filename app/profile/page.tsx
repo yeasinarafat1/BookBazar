@@ -18,7 +18,7 @@ const Profile = async () => {
   const verifiedProfile = await verifiedUserData(profile?.clerkId || "", profile?.verification_status === "verified");
 
 
-  const userListedBooks = await getUserBook(profile?.clerkId || "") || [];
+  const userListedBooks = await getUserBook(profile?.id || "") || [];
 
   const isVerified =
     profile?.verification_status=== "verified";

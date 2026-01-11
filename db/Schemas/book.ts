@@ -1,16 +1,17 @@
-import { pgTable,uuid,varchar,text,integer,boolean,timestamp } from "drizzle-orm/pg-core";
-
+import { pgTable,uuid,varchar,text,integer,boolean,timestamp, pgEnum } from "drizzle-orm/pg-core";
+export const statusEnum=pgEnum('book_status_enum', ['pending', 'approved', 'rejected']);
 export const booksTable = pgTable('books_table', {
   id: uuid("id").primaryKey().defaultRandom(),
   
   // Link to the seller (assuming you use Clerk ID or User ID)
   sellerId: varchar("seller_id", { length: 255 }).notNull(), 
-  
+  sellerName:varchar("seller_name",{length:255}).notNull(),
+  sellerWhatsapp:varchar("seller_whatsapp",{length:20}).notNull(),
+  sellerPhone:varchar("seller_phone",{length:20}),
   title: text('title').notNull(),
   author: text('author').notNull(),
   
-  // 🟢 HERE IS THE ARRAY OF STRINGS FIELD
-  // In Postgres this becomes text[]
+
   images: text('images').array().notNull(), 
   
   category: text('category').notNull(), // e.g., 'engineering'
@@ -23,7 +24,7 @@ export const booksTable = pgTable('books_table', {
   description: text('description'),
   
   // Status management
-  status: text('status').default('pending').notNull(), // pending, approved, rejected
+  status: statusEnum('status').default('pending').notNull(), // pending, approved, rejected
   isSold: boolean('is_sold').default(false).notNull(),
   
   createdAt: timestamp("created_at").notNull().defaultNow(),

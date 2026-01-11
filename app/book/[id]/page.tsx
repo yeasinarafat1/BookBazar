@@ -145,7 +145,7 @@ export default async function BookPage({ params }: BookPageProps) {
           
             <div className="space-y-4">
               {/* Seller Card */}
-              <SellerCard author={book.author} />
+              <SellerCard SellerName={book.sellerName} whatsapp={book.sellerWhatsapp} contactNumber={book.sellerPhone || ""} />
 
               {/* Safety Tips */}
               <SafetyTips/>

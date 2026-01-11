@@ -10,8 +10,11 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { 
   X, ImagePlus, Sparkles, ArrowRight, 
-  BookOpen, Check, Loader2
+  BookOpen, Check, Loader2, Phone, MessageCircle 
 } from 'lucide-react';
+
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 // Import the Server Action
 import { createListing } from '@/lib/action/book';
@@ -58,6 +61,8 @@ const SellPage = () => {
     price: '',
     description: '',
     location: '',
+    whatsapp: '',
+    phone: '',
   });
 
   const categories: BookCategory[] = [
@@ -95,10 +100,11 @@ const SellPage = () => {
   const handleSubmit = async () => {
     // Validation
     if (!formData.title || !formData.author || !formData.category || 
-        !formData.condition || !formData.price) {
+        !formData.condition || !formData.price || !formData.location ||
+        !formData.phone || !formData.whatsapp) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields including contact details.",
         variant: "destructive",
       });
       return;
@@ -115,17 +121,13 @@ const SellPage = () => {
         data.append(key, value);
       });
       
-      // Append images (Iterate and append with the same key 'images')
+      // Append images
       images.forEach((file) => {
         data.append('images', file);
       });
 
       // 2. Call Server Action
       await createListing(data);
-
-      // Note: Success toast is handled here, but redirect happens in Server Action.
-      // However, usually Server Action redirects throw an error in try/catch in client components.
-      // A safer pattern is to handle redirect here or treat the specific NEXT_REDIRECT error.
       
     } catch (error: any) {
       // Next.js redirects throw an error, we ignore that specific error
@@ -177,12 +179,12 @@ const SellPage = () => {
           <h1 className="text-2xl font-bold text-foreground mb-1">
             {step === 1 && "Add Photos"}
             {step === 2 && "Book Details"}
-            {step === 3 && "Pricing & Location"}
+            {step === 3 && "Pricing & Contact"}
           </h1>
           <p className="text-muted-foreground">
             {step === 1 && "Add up to 5 photos of your book"}
             {step === 2 && "Tell us about the book"}
-            {step === 3 && "Set your price and pickup location"}
+            {step === 3 && "Set your price, location and contact info"}
           </p>
         </div>
         
@@ -380,9 +382,11 @@ const SellPage = () => {
           </div>
         )}
         
-        {/* Step 3: Price & Location */}
+        {/* Step 3: Price, Location & Contact */}
         {step === 3 && (
           <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            
+            {/* Price Section */}
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Price (৳) *
@@ -405,6 +409,7 @@ const SellPage = () => {
               </p>
             </div>
             
+            {/* Location Section */}
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Pickup Location *
@@ -415,7 +420,49 @@ const SellPage = () => {
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               />
             </div>
+
+            {/* --- NEW CONTACT SECTION WITH PHONE INPUT --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label 
+                  htmlFor="phone-input" 
+                  className="text-sm font-medium text-foreground mb-2 flex items-center gap-2"
+                >
+                  <Phone className="h-4 w-4" /> Phone Number *
+                </label>
+                <div className="relative">
+                  <PhoneInput
+                    id="phone-input"
+                    defaultCountry="BD"
+                    placeholder="017..."
+                    value={formData.phone || undefined} // Fix for value type warning
+                    onChange={(value) => setFormData({ ...formData, phone: value || '' })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputCountryIcon]:h-5 [&_.PhoneInputCountryIcon]:w-auto"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label 
+                  htmlFor="whatsapp-input"
+                  className="text-sm font-medium text-foreground mb-2 flex items-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" /> WhatsApp *
+                </label>
+                <div className="relative">
+                  <PhoneInput
+                    id="whatsapp-input"
+                    defaultCountry="BD"
+                    placeholder="017..."
+                    value={formData.whatsapp || undefined} // Fix for value type warning
+                    onChange={(value) => setFormData({ ...formData, whatsapp: value || '' })}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:border-none [&_.PhoneInputInput]:outline-none [&_.PhoneInputCountryIcon]:h-5 [&_.PhoneInputCountryIcon]:w-auto"
+                  />
+                </div>
+              </div>
+            </div>
             
+            {/* Description Section */}
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">
                 Description (Optional)
@@ -452,7 +499,7 @@ const SellPage = () => {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!formData.price || !formData.location || isSubmitting}
+                disabled={!formData.price || !formData.location || !formData.phone || !formData.whatsapp || isSubmitting}
                 variant="default"
                 className="flex-1 gap-2"
               >

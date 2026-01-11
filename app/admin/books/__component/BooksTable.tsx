@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateBookStatus } from "@/lib/action/book";
+import { updateBookStatus, deleteBook } from "@/lib/action/book";
 import { Book } from "@/db/Schemas/book";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/dialog";
 import { 
   Eye, CheckCircle, XCircle, Clock, BookOpen, 
-  MapPin, GraduationCap, Image as ImageIcon, Calendar, 
-  DollarSign, Package, Loader2 
+  MapPin, Calendar, Package, Loader2, Trash2,
+  User, Phone, MessageCircle // Added these icons
 } from "lucide-react";
 
 export default function BooksTable({ books }: { books: Book[] }) {
@@ -45,7 +45,6 @@ export default function BooksTable({ books }: { books: Book[] }) {
       });
       
       setSelectedBook(null);
-      // Refresh the server components to show new data
       router.refresh(); 
       
     } catch (error) {
@@ -60,7 +59,34 @@ export default function BooksTable({ books }: { books: Book[] }) {
     }
   };
 
-  // --- Helper Functions for UI ---
+  const handleDelete = async (bookId: string) => {
+    if (!confirm("Are you sure you want to delete this book? This action cannot be undone.")) return;
+
+    setIsLoading(true);
+    try {
+      await deleteBook(bookId);
+      
+      toast({
+        title: "Book Deleted",
+        description: "The listing has been permanently removed.",
+        variant: "default",
+      });
+      
+      setSelectedBook(null);
+      router.refresh();
+      
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to delete book.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved": 
@@ -68,7 +94,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
       case "rejected": 
         return <Badge className="bg-red-50 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
       case "sold": 
-        return <Badge className="bg-blue-50 text-blue-700 border-blue-200"><DollarSign className="w-3 h-3 mr-1" />Sold</Badge>;
+        return <Badge className="bg-blue-50 text-blue-700 border-blue-200"><Package className="w-3 h-3 mr-1" />Sold</Badge>;
       default: 
         return <Badge className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
     }
@@ -78,7 +104,6 @@ export default function BooksTable({ books }: { books: Book[] }) {
 
   return (
     <>
-      {/* Table Section */}
       <Card className="border-slate-200 shadow-md">
         <CardContent className="p-0">
           <Table>
@@ -121,7 +146,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                           <p className="font-semibold text-slate-900 line-clamp-1">{book.title}</p>
                           <p className="text-sm text-slate-600 mt-0.5">{book.author}</p>
                           {book.semester && (
-                            <Badge variant="outline" className="mt-1 text-xs">
+                            <Badge variant="outline" className="mt-1 text-xs text-slate-500">
                               Semester {book.semester}
                             </Badge>
                           )}
@@ -129,7 +154,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="capitalize bg-blue-50 text-blue-700 border-blue-200">
+                      <Badge variant="secondary" className="capitalize bg-slate-100 text-slate-700">
                         {book.category.replace('-', ' ')}
                       </Badge>
                     </TableCell>
@@ -137,10 +162,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                       <span className="font-semibold text-slate-900">৳{book.price}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize bg-slate-50 text-slate-700 border-slate-300">
-                        <Package className="w-3 h-3 mr-1" />
-                        {book.condition.replace('-', ' ')}
-                      </Badge>
+                      <span className="capitalize text-sm text-slate-600">{book.condition.replace('-', ' ')}</span>
                     </TableCell>
                     <TableCell>{getStatusBadge(book.status)}</TableCell>
                     <TableCell className="text-right">
@@ -166,57 +188,107 @@ export default function BooksTable({ books }: { books: Book[] }) {
       <Dialog open={!!selectedBook} onOpenChange={() => !isLoading && setSelectedBook(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle>Review Book Listing</DialogTitle>
+            <div className="flex items-center justify-between mr-8">
+              <DialogTitle className="text-xl">Review Listing</DialogTitle>
               {selectedBook && getStatusBadge(selectedBook.status)}
             </div>
           </DialogHeader>
           
           {selectedBook && (
             <div className="space-y-6">
-              {/* Images */}
-              <div>
-                <p className="text-sm font-medium mb-3">Photos ({selectedBook.images.length})</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {selectedBook.images.map((img, idx) => (
-                    <div key={idx} className="aspect-square rounded-lg overflow-hidden border">
-                      <img src={img} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+              {/* Top Section: Images & Main Info */}
+              <div className="grid md:grid-cols-2 gap-6">
+                 {/* Images */}
+                <div className="space-y-3">
+                    <div className="aspect-video rounded-lg overflow-hidden border bg-slate-50">
+                        {selectedBook.images?.[0] ? (
+                            <img src={selectedBook.images[0]} alt="Cover" className="w-full h-full object-contain" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
+                        )}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Book Info */}
-              <div>
-                <h3 className="text-xl font-bold mb-1">{selectedBook.title}</h3>
-                <p className="text-muted-foreground mb-3">by {selectedBook.author}</p>
-                
-                <div className="flex gap-2 mb-4">
-                  <Badge variant="secondary">{selectedBook.category.replace('-', ' ')}</Badge>
-                  {selectedBook.semester && <Badge variant="outline">Semester {selectedBook.semester}</Badge>}
-                  <Badge variant="outline">{selectedBook.condition.replace('-', ' ')}</Badge>
+                    {selectedBook.images.length > 1 && (
+                        <div className="grid grid-cols-4 gap-2">
+                            {selectedBook.images.map((img, idx) => (
+                                <div key={idx} className="aspect-square rounded-md overflow-hidden border cursor-pointer hover:opacity-80">
+                                <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Price</p>
-                    <p className="text-lg font-bold">৳{selectedBook.price}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Location</p>
-                    <p className="text-sm font-medium">{selectedBook.location}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-sm text-muted-foreground">Posted</p>
-                    <p className="text-sm">{new Date(selectedBook.createdAt).toLocaleDateString()}</p>
-                  </div>
+                {/* Details Column */}
+                <div className="space-y-4">
+                    <div>
+                        <h3 className="text-2xl font-bold text-slate-900">{selectedBook.title}</h3>
+                        <p className="text-lg text-slate-600">by {selectedBook.author}</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="bg-slate-100">{selectedBook.category}</Badge>
+                        <Badge variant="outline" className="border-slate-300">{selectedBook.condition}</Badge>
+                        {selectedBook.semester && <Badge variant="outline">Sem: {selectedBook.semester}</Badge>}
+                    </div>
+
+                    {/* --- NEW: Seller & Location Card --- */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
+                        {/* Seller Info */}
+                        <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Seller Details</p>
+                            <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                    <User className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-slate-900">{selectedBook.sellerName}</p>
+                                    <div className="flex flex-col gap-1 mt-1">
+                                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                                            <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                                            <span className="font-mono">{selectedBook.sellerWhatsapp}</span>
+                                        </div>
+                                        {selectedBook.sellerPhone && (
+                                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                                                <Phone className="h-3.5 w-3.5 text-blue-600" />
+                                                <span className="font-mono">{selectedBook.sellerPhone}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="h-px bg-slate-200 w-full"></div>
+
+                        {/* Location & Price */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Pickup Location</p>
+                                <div className="flex items-center gap-1.5 text-slate-900">
+                                    <MapPin className="h-4 w-4 text-red-500" />
+                                    <span className="text-sm font-medium">{selectedBook.location}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Price</p>
+                                <div className="text-lg font-bold text-slate-900">৳{selectedBook.price}</div>
+                            </div>
+                        </div>
+                         {/* Posted Date */}
+                         <div className="flex items-center gap-1.5 text-xs text-slate-500 pt-2">
+                            <Calendar className="h-3 w-3" />
+                            Posted on {new Date(selectedBook.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
                 </div>
               </div>
 
               {/* Description */}
-              <div>
-                <p className="text-sm font-medium mb-2">Description</p>
-                <p className="text-sm text-muted-foreground">{selectedBook.description || "No description"}</p>
+              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+                <p className="text-sm font-semibold text-slate-900 mb-2">Description</p>
+                <p className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">
+                    {selectedBook.description || "No description provided by seller."}
+                </p>
               </div>
 
               {/* Admin Notes */}
@@ -226,7 +298,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                   <Textarea 
                     value={adminNotes} 
                     onChange={(e) => setAdminNotes(e.target.value)} 
-                    placeholder="Add feedback for the seller..."
+                    placeholder="Add feedback regarding the approval or rejection..."
                     rows={3}
                   />
                 </div>
@@ -234,27 +306,42 @@ export default function BooksTable({ books }: { books: Book[] }) {
             </div>
           )}
 
-          {canUpdateStatus && (
-            <DialogFooter>
+          {/* Dialog Footer */}
+          {selectedBook && (
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setSelectedBook(null)} disabled={isLoading}>
-                Cancel
+                {canUpdateStatus ? "Cancel" : "Close"}
               </Button>
-              <Button 
-                variant="destructive" 
-                onClick={() => selectedBook && handleStatusUpdate(selectedBook.id, "rejected")}
-                disabled={isLoading}
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
-                Reject
-              </Button>
-              <Button 
-                onClick={() => selectedBook && handleStatusUpdate(selectedBook.id, "approved")}
-                disabled={isLoading}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                Approve
-              </Button>
+              
+              {canUpdateStatus ? (
+                <>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleStatusUpdate(selectedBook.id, "rejected")}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+                    Reject
+                  </Button>
+                  <Button 
+                    onClick={() => handleStatusUpdate(selectedBook.id, "approved")}
+                    disabled={isLoading}
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                    Approve
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => handleDelete(selectedBook.id)}
+                  disabled={isLoading}
+                >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    Delete Book
+                </Button>
+              )}
             </DialogFooter>
           )}
         </DialogContent>

@@ -2,15 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { uploadImage } from "./upload";
+import { deleteImage, uploadImage } from "./upload";
 import { booksTable } from "@/db/schema";
 import { db } from "@/db/drizzle";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { getPublicIdFromUrl } from "../utils";
+import { getLoggedInUser } from "./user";
 
 export async function createListing(formData: FormData) {
   // 1. Authenticate User
-  const user = await currentUser();
+  const {user} = await getLoggedInUser();
   
   if (!user) {
     throw new Error("You must be logged in to sell a book.");
@@ -19,6 +21,8 @@ export async function createListing(formData: FormData) {
   // 2. Extract Data
   const title = formData.get("title") as string;
   const author = formData.get("author") as string;
+  const whatsapp = formData.get("whatsapp") as string;
+  const phone = formData.get("phone") as string;
   const category = formData.get("category") as string;
   const condition = formData.get("condition") as string;
   const price = formData.get("price") as string;
@@ -55,7 +59,10 @@ export async function createListing(formData: FormData) {
 
     // 4. Insert into Database
     await db.insert(booksTable).values({
-      sellerId: user.id, // Using Clerk User ID
+      sellerId: user.id, 
+      sellerName: user.name || "Unknown Seller",
+      sellerWhatsapp: whatsapp,
+      sellerPhone: phone || null,
       title,
       author,
       category,
@@ -94,7 +101,7 @@ export const updateBookStatus = async (bookId: string, newStatus: string) => {
   try {
     await db
       .update(booksTable)
-      .set({ status: newStatus })
+      .set({ status: newStatus as any }) // 2. Type assertion to 'any' to bypass enum type issue
       .where(eq(booksTable.id, bookId)); // 3. Correct usage: eq(column, value)
 
     // 4. Refresh pages so the UI updates immediately
@@ -131,5 +138,63 @@ export const getBookById = async (bookId: string) => {
   } catch (error) {
     // If the query fails (e.g., invalid ID format), we treat it as "not found"
     return null; 
+  }
+};
+
+export const deleteBook = async (bookId: string) => {
+  try {
+    // A. Fetch the book first to get the images
+    const book = await getBookById(bookId);
+
+    if (!book) {
+      throw new Error("Book not found");
+    }
+
+    // B. Delete images from Cloudinary (if any exist)
+    if (book.images && book.images.length > 0) {
+      // Create an array of delete promises
+      const deletePromises = book.images.map((imageUrl) => {
+        const publicId = getPublicIdFromUrl(imageUrl);
+        if (publicId) {
+          return deleteImage(publicId);
+        }
+        return Promise.resolve(false);
+      });
+
+      // Execute all Cloudinary deletions in parallel
+      // We use Promise.allSettled so one failure doesn't stop the others
+      await Promise.allSettled(deletePromises);
+    }
+
+    // C. Delete the record from the Database
+    await db.delete(booksTable).where(eq(booksTable.id, bookId));
+    
+    // D. Revalidate paths to update UI
+    revalidatePath("/browse"); // Adjust to your main listing page
+    revalidatePath("/admin/books"); // Adjust to your admin page
+
+    return { success: true };
+
+  } catch (error) {
+    console.error("Error deleting book:", error);
+    throw new Error("Failed to delete book");
+  }
+};
+
+export const getVerifiedAndUnsoldBooks = async () => {
+  try {
+    const books = await db
+      .select()
+      .from(booksTable)
+      .where(
+        and(
+          eq(booksTable.status, "approved"),
+          eq(booksTable.isSold, false)
+        )
+      );
+    return books;
+  } catch (error) {
+    console.error("Error fetching verified and unsold books:", error);
+    throw new Error("Failed to fetch verified and unsold books");
   }
 };
