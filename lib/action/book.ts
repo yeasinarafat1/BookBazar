@@ -6,9 +6,10 @@ import { deleteImage, uploadImage } from "./upload";
 import { booksTable } from "@/db/schema";
 import { db } from "@/db/drizzle";
 import { currentUser } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, or, SQL } from "drizzle-orm";
 import { getPublicIdFromUrl } from "../utils";
 import { getLoggedInUser } from "./user";
+import { BookFilters } from "@/types";
 
 export async function createListing(formData: FormData) {
   // 1. Authenticate User
@@ -181,20 +182,108 @@ export const deleteBook = async (bookId: string) => {
   }
 };
 
-export const getVerifiedAndUnsoldBooks = async () => {
+export const getVerifiedAndUnsoldBooks = async (filters?: BookFilters) => {
+  try {
+    // 2. Explicitly type this array as SQL[]
+    const conditions: SQL[] = [
+      eq(booksTable.status, "approved"),
+      eq(booksTable.isSold, false),
+    ];
+
+    if (filters) {
+      // 1. Search Query
+      if (filters.searchQuery) {
+        const searchStr = `%${filters.searchQuery}%`;
+        conditions.push(
+          or(
+            ilike(booksTable.title, searchStr),
+            ilike(booksTable.author, searchStr)
+          )! // 3. The '!' assertion might be needed if TS thinks 'or' can return undefined
+        );
+      }
+
+      // 2. Category
+      if (filters.category) {
+        conditions.push(eq(booksTable.category, filters.category));
+      }
+
+      // 3. Condition
+      if (filters.condition) {
+        conditions.push(eq(booksTable.condition, filters.condition));
+      }
+
+      // 4. Price Range
+      if (filters.minPrice !== undefined) {
+        conditions.push(gte(booksTable.price, filters.minPrice));
+      }
+      if (filters.maxPrice !== undefined) {
+        conditions.push(lte(booksTable.price, filters.maxPrice));
+      }
+
+      // 5. Semester
+      if (filters.semester !== undefined) {
+        conditions.push(eq(booksTable.semester, filters.semester.toString()));
+      }
+
+      // 6. Featured
+      if (filters.featured) {
+        conditions.push(eq(booksTable.isFeatured, true));
+      }
+    }
+
+    const books = await db
+      .select()
+      .from(booksTable)
+      .where(and(...conditions,
+          eq(booksTable.status, "approved"),
+          eq(booksTable.isSold, false)
+        ))
+      .orderBy(desc(booksTable.createdAt));
+
+    return books;
+  } catch (error) {
+    console.error("Error fetching verified books:", error);
+    return [];
+  }
+};
+export const toggleBookFeatured = async (bookId: string, currentStatus: boolean) => {
+  try {
+    await db
+      .update(booksTable)
+      .set({ isFeatured: !currentStatus })
+      .where(eq(booksTable.id, bookId));
+      
+    revalidatePath("/admin/books"); // adjust path to where your table lives
+    return { success: true };
+  } catch (error) {
+    console.error("Error toggling featured status:", error);
+    return { success: false, error: "Failed to update featured status" };
+  }
+};
+export const getFeaturedBooks = async (limit:number) => {
   try {
     const books = await db
       .select()
       .from(booksTable)
-      .where(
-        and(
-          eq(booksTable.status, "approved"),
-          eq(booksTable.isSold, false)
-        )
-      );
+      .where(eq(booksTable.isFeatured, true))
+      .limit(limit);
     return books;
   } catch (error) {
-    console.error("Error fetching verified and unsold books:", error);
-    throw new Error("Failed to fetch verified and unsold books");
+    console.error("Error fetching featured books:", error);
+    throw new Error("Failed to fetch featured books");
+  }
+};
+export const getRecentBooks = async (limit: number = 4) => {
+  try {
+    const books = await db
+      .select()
+      .from(booksTable)
+      .where(eq(booksTable.status, "approved"))
+      .orderBy(desc(booksTable.createdAt))
+      .limit(limit);
+    return books;
+  } catch (error) {
+    console.error("Error fetching recent books:", error);
+    throw new Error("Failed to fetch recent books");
   }
 };

@@ -17,7 +17,7 @@ const ImageSlider = ({ images }: { images: string[] }) => {
     <div className="relative bg-white border-b border-gray-200">
       <div className="container  px-0 md:px-4">
         {/* Changed to fixed height instead of aspect-ratio to prevent layout shifts */}
-        <div className="relative w-full md:w-4/5 h-87.5 md:h-125 overflow-hidden rounded-none md:rounded-lg bg-gray-100 group">
+        <div className="relative w-full md:w-5/7 h-87.5 md:h-125 overflow-hidden rounded-none md:rounded-lg bg-gray-100 group">
           
           {/* LAYER 1: Blurred Background Image (Fills the space) */}
           <div 

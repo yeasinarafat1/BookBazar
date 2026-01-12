@@ -26,7 +26,7 @@ export const booksTable = pgTable('books_table', {
   // Status management
   status: statusEnum('status').default('pending').notNull(), // pending, approved, rejected
   isSold: boolean('is_sold').default(false).notNull(),
-  
+  isFeatured: boolean('is_featured').default(false).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

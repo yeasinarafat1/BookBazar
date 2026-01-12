@@ -92,3 +92,12 @@ export interface ProfileData {
   verification_status: string | null;
   created_at: string;
 }
+export interface BookFilters {
+  searchQuery?: string;
+  category?: BookCategory;
+  condition?: BookCondition;
+  minPrice?: number;
+  maxPrice?: number;
+  semester?: number;
+  featured?: boolean;
+}

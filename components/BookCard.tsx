@@ -1,4 +1,4 @@
-
+'use client';
 import {  BookCondition } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { conditionLabels } from '@/data/mockBooks';

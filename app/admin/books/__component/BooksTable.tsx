@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateBookStatus, deleteBook } from "@/lib/action/book";
+// Add toggleBookFeatured to imports
+import { updateBookStatus, deleteBook, toggleBookFeatured } from "@/lib/action/book";
 import { Book } from "@/db/Schemas/book";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,19 +19,45 @@ import {
 import { 
   Eye, CheckCircle, XCircle, Clock, BookOpen, 
   MapPin, Calendar, Package, Loader2, Trash2,
-  User, Phone, MessageCircle // Added these icons
+  User, Phone, MessageCircle, Star // Added Star icon
 } from "lucide-react";
+import { cn } from "@/lib/utils"; // Make sure you have this utility
 
 export default function BooksTable({ books }: { books: Book[] }) {
   const router = useRouter();
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTogglingFeature, setIsTogglingFeature] = useState<string | null>(null); // Track which book is toggling
   const { toast } = useToast();
 
   const handleReviewBook = (book: Book) => {
     setSelectedBook(book);
     setAdminNotes("");
+  };
+
+  // --- NEW: Handle Featured Toggle ---
+  const handleToggleFeatured = async (book: Book) => {
+    setIsTogglingFeature(book.id);
+    try {
+      await toggleBookFeatured(book.id, book.isFeatured);
+      
+      toast({
+        title: !book.isFeatured ? "Added to Featured" : "Removed from Featured",
+        description: `Book "${book.title}" is ${!book.isFeatured ? "now featured" : "no longer featured"}.`,
+        variant: "default",
+      });
+      
+      router.refresh();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update featured status.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTogglingFeature(null);
+    }
   };
 
   const handleStatusUpdate = async (bookId: string, status: "approved" | "rejected") => {
@@ -133,12 +160,18 @@ export default function BooksTable({ books }: { books: Book[] }) {
                   <TableRow key={book.id} className="hover:bg-slate-50/50 transition-colors">
                     <TableCell>
                       <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
+                        <div className="h-16 w-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
                           {book.images?.[0] ? (
                             <img src={book.images[0]} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               <BookOpen className="h-6 w-6 text-slate-400" />
+                            </div>
+                          )}
+                          {/* Small indicator on image if featured */}
+                          {book.isFeatured && (
+                            <div className="absolute top-0 right-0 bg-yellow-400 p-0.5 rounded-bl-md">
+                                <Star className="h-3 w-3 text-white fill-white" />
                             </div>
                           )}
                         </div>
@@ -166,15 +199,37 @@ export default function BooksTable({ books }: { books: Book[] }) {
                     </TableCell>
                     <TableCell>{getStatusBadge(book.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => handleReviewBook(book)}
-                        className="hover:bg-blue-50 hover:text-blue-700"
-                      >
-                        <Eye className="h-4 w-4 mr-1.5" />
-                        Review
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {/* FEATURE TOGGLE BUTTON */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleToggleFeatured(book)}
+                          disabled={isTogglingFeature === book.id}
+                          className={cn(
+                            "h-8 w-8 hover:bg-yellow-50",
+                            book.isFeatured ? "text-yellow-500 hover:text-yellow-600" : "text-slate-400 hover:text-yellow-500"
+                          )}
+                          title={book.isFeatured ? "Remove from Featured" : "Add to Featured"}
+                        >
+                          {isTogglingFeature === book.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Star className={cn("h-4 w-4", book.isFeatured && "fill-current")} />
+                          )}
+                        </Button>
+
+                        {/* REVIEW BUTTON */}
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleReviewBook(book)}
+                          className="hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <Eye className="h-4 w-4 mr-1.5" />
+                          Review
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -200,11 +255,17 @@ export default function BooksTable({ books }: { books: Book[] }) {
               <div className="grid md:grid-cols-2 gap-6">
                  {/* Images */}
                 <div className="space-y-3">
-                    <div className="aspect-video rounded-lg overflow-hidden border bg-slate-50">
+                    <div className="aspect-video rounded-lg overflow-hidden border bg-slate-50 relative">
                         {selectedBook.images?.[0] ? (
                             <img src={selectedBook.images[0]} alt="Cover" className="w-full h-full object-contain" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
+                        )}
+                        {/* Featured Badge in Dialog */}
+                        {selectedBook.isFeatured && (
+                            <div className="absolute top-2 right-2 bg-yellow-400 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-white" /> Featured
+                            </div>
                         )}
                     </div>
                     {selectedBook.images.length > 1 && (
@@ -231,7 +292,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                         {selectedBook.semester && <Badge variant="outline">Sem: {selectedBook.semester}</Badge>}
                     </div>
 
-                    {/* --- NEW: Seller & Location Card --- */}
+                    {/* --- Seller & Location Card --- */}
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4">
                         {/* Seller Info */}
                         <div>
