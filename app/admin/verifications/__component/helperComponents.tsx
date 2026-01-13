@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { VerificationRequest } from "@/db/schema";
+import { VerificationRequest } from "@/db/Schemas/ProfileVerificationRequest";
 
 import { Badge as Badges, Building2, CheckCircle,  Clock, ExternalLink, FileCheck, FileText, GraduationCap, Hash, ImageIcon, Loader2, Sun, User, XCircle } from "lucide-react";
+import Image from "next/image";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -45,7 +46,7 @@ const DocumentPreview = ({ url, loading, onLoad }: any) => (
       <div className="relative group rounded-2xl overflow-hidden border-2 border-gray-200 bg-gray-50">
         <div className="relative w-full min-h-75 flex items-center justify-center">
           {loading && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-gray-400" /></div>}
-          <img src={url} alt="Document" className="max-w-full max-h-100 object-contain" onLoad={onLoad} />
+          <Image src={url} alt="Document" className="max-w-full max-h-100 object-contain" onLoad={onLoad} />
         </div>
         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
           <a href={url} target="_blank" rel="noopener noreferrer">
