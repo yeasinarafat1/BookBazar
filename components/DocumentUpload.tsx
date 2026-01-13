@@ -1,6 +1,7 @@
 import { Upload, FileText, ShieldCheck } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 
 interface DocumentUploadProps {
   file: File | null
@@ -27,7 +28,7 @@ export function DocumentUpload({ file, preview, onChange }: DocumentUploadProps)
         )}
       >
         {preview ? (
-          <img src={preview} alt="Doc Preview" className="h-full w-full object-contain p-4" />
+          <Image src={preview} alt="Doc Preview" className="h-full w-full object-contain p-4" />
         ) : file ? (
           <div className="flex flex-col items-center p-4 animate-in fade-in zoom-in-95">
             <div className="p-4 bg-primary/10 rounded-full mb-3">

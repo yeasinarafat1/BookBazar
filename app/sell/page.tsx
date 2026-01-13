@@ -18,6 +18,7 @@ import 'react-phone-number-input/style.css';
 
 // Import the Server Action
 import { createListing } from '@/lib/action/book';
+import Image from 'next/image';
 
 // Types
 type BookCategory = 'engineering' | 'computer-science' | 'electronics' | 'mechanical' | 'civil' | 'electrical' | 'mathematics' | 'science' | 'business' | 'language' | 'other';
@@ -198,7 +199,7 @@ const SellPage = () => {
                   key={index}
                   className="relative aspect-square rounded-xl overflow-hidden bg-muted"
                 >
-                  <img src={img} alt="Preview" className="h-full w-full object-cover" />
+                  <Image src={img} alt="Preview" className="h-full w-full object-cover" />
                   <button
                     onClick={() => removeImage(index)}
                     className="absolute top-2 right-2 h-6 w-6 rounded-full bg-foreground/80 text-background flex items-center justify-center hover:bg-foreground transition-colors"
@@ -481,7 +482,7 @@ const SellPage = () => {
               <p className="text-sm font-medium text-foreground mb-3">Preview</p>
               <div className="flex gap-3">
                 {imagePreviews[0] && (
-                  <img src={imagePreviews[0]} alt="Book Cover" className="h-20 w-16 rounded-lg object-cover" />
+                  <Image src={imagePreviews[0]} alt="Book Cover" className="h-20 w-16 rounded-lg object-cover" />
                 )}
                 <div>
                   <p className="font-semibold text-foreground">{formData.title || 'Book Title'}</p>

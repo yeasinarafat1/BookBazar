@@ -22,6 +22,7 @@ import {
   User, Phone, MessageCircle, Star // Added Star icon
 } from "lucide-react";
 import { cn } from "@/lib/utils"; // Make sure you have this utility
+import Image from "next/image";
 
 export default function BooksTable({ books }: { books: Book[] }) {
   const router = useRouter();
@@ -162,7 +163,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                       <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
                           {book.images?.[0] ? (
-                            <img src={book.images[0]} alt="" className="h-full w-full object-cover" />
+                            <Image fill src={book.images[0]} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               <BookOpen className="h-6 w-6 text-slate-400" />
@@ -257,7 +258,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                 <div className="space-y-3">
                     <div className="aspect-video rounded-lg overflow-hidden border bg-slate-50 relative">
                         {selectedBook.images?.[0] ? (
-                            <img src={selectedBook.images[0]} alt="Cover" className="w-full h-full object-contain" />
+                            <Image fill src={selectedBook.images[0]} alt="Cover" className="w-full h-full object-contain" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
                         )}
@@ -272,7 +273,7 @@ export default function BooksTable({ books }: { books: Book[] }) {
                         <div className="grid grid-cols-4 gap-2">
                             {selectedBook.images.map((img, idx) => (
                                 <div key={idx} className="aspect-square rounded-md overflow-hidden border cursor-pointer hover:opacity-80">
-                                <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
+                                <Image fill src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
                                 </div>
                             ))}
                         </div>

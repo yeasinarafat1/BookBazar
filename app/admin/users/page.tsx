@@ -15,6 +15,7 @@ import { Shield, CheckCircle, XCircle, User as UserIcon, Users } from "lucide-re
 import Header from "../__component/Header";
 import SearchFilter from "../__component/SearchFilter";
 import StatsSection from "../__component/StatsSection";
+import Image from "next/image";
 
 // Helper to filter users in memory
 const filterUsers = (users: User[], query: string, status: string) => {
@@ -141,7 +142,9 @@ export default async function UsersPage({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         {user.profile_pic ? (
-                          <img
+                          <Image
+                            height={40}
+                            width={40}
                             src={user.profile_pic}
                             alt={user.name || "User"}
                             className="w-10 h-10 rounded-full object-cover border border-border"

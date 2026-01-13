@@ -7,6 +7,7 @@ import {
   Heart,
   Share2,
 } from "lucide-react";
+import Image from "next/image";
 import React, { useState } from "react";
 
 const ImageSlider = ({ images }: { images: string[] }) => {
@@ -26,7 +27,8 @@ const ImageSlider = ({ images }: { images: string[] }) => {
           />
 
           {/* LAYER 2: The Actual Image (Contained, not cropped) */}
-          <img
+          <Image
+          fill
             src={images[currentImageIndex]}
             alt="Book"
             className="relative h-full w-full object-contain z-10"

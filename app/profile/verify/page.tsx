@@ -20,7 +20,8 @@ import Link from "next/link"
 import { uploadImage } from "@/lib/action/upload"
 import { newVerficationRequest, getVerificationRequest, reSubmitVerificationRequest } from "@/lib/action/admin" 
 import { VerificationStatus } from "@/components/verification-status"
-import { VerificationRequest } from "@/db/schema"
+import Image from "next/image"
+import { VerificationRequest } from "@/db/Schemas/ProfileVerificationRequest"
 
 export default function ProfileVerification({
   initialData,
@@ -230,7 +231,7 @@ const handleResubmit = async () => {
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-border">
                 {avatarPreview || existingAvatar ? (
-                  <img
+                  <Image
                     src={avatarPreview || existingAvatar || ""}
                     alt="Avatar"
                     className="h-full w-full object-cover"
@@ -369,7 +370,7 @@ const handleResubmit = async () => {
               onClick={() => document.getElementById("document")?.click()}
             >
               {documentPreview ? (
-                <img src={documentPreview} alt="Document" className="max-h-48 mx-auto rounded-lg" />
+                <Image src={documentPreview} alt="Document" className="max-h-48 mx-auto rounded-lg" />
               ) : documentFile ? (
                 <div className="flex flex-col items-center gap-2">
                   <FileText className="h-12 w-12 text-primary" />

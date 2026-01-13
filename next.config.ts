@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
       "avatars.githubusercontent.com",
       "firebasestorage.googleapis.com",
       "res.cloudinary.com",
+      "img.clerk.com"
     ],
   },
 };

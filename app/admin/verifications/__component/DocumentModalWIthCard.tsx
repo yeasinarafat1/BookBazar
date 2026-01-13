@@ -15,13 +15,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { VerificationRequest } from "@/db/schema";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentPreview, getStatusBadge, InfoGrid } from "./helperComponents";
 import DocumentCard from "./DocumentCard";
 
 // IMPORT YOUR SERVER ACTION HERE
 import { updateVerificationRequestStatus } from "@/lib/action/admin"; // <--- Adjust this path
+import Image from "next/image";
+import { VerificationRequest } from "@/db/Schemas/ProfileVerificationRequest";
 
 interface DocumentModalWithCardProps {
   doc: VerificationRequest;
@@ -130,7 +131,8 @@ export default function DocumentModalWithCard({
             />
             <div className="relative p-6 flex items-start gap-5">
               <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg">
-                <img
+                <Image
+                fill
                   src={doc.profile_pic}
                   alt="Profile"
                   className="w-full h-full object-cover"

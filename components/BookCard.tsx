@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Book } from '@/db/Schemas/book';
+import Image from 'next/image';
 
 interface BookCardProps {
   book: Book;
@@ -42,13 +43,14 @@ export function BookCard({ book, className }: BookCardProps) {
         {!imageLoaded && (
           <div className="absolute inset-0 animate-pulse bg-muted" />
         )}
-        <img
+        <Image
           src={book.images[0]}
           alt={book.title}
           className={cn(
             "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105",
             imageLoaded ? "opacity-100" : "opacity-0"
           )}
+          fill
           onLoad={() => setImageLoaded(true)}
           loading="lazy"
         />

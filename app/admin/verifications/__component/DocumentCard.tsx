@@ -9,8 +9,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { VerificationRequest } from "@/db/schema";
 import { getStatusBadge } from "./helperComponents"; // Assuming this is where it lives based on your imports
+import Image from "next/image";
+import { VerificationRequest } from "@/db/Schemas/ProfileVerificationRequest";
 
 interface DocumentCardProps extends React.HTMLAttributes<HTMLDivElement> {
   doc: VerificationRequest;
@@ -58,7 +59,8 @@ const DocumentCard = forwardRef<HTMLDivElement, DocumentCardProps>(
               {/* Avatar */}
               <div className="relative shrink-0">
                 <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white shadow-lg ring-2 ring-gray-100">
-                  <img
+                  <Image
+                  fill
                     src={doc.profile_pic}
                     alt={doc.name}
                     className="w-full h-full object-cover"

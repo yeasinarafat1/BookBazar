@@ -1,4 +1,5 @@
 import { User, Camera } from "lucide-react"
+import Image from "next/image"
 
 interface AvatarUploadProps {
   preview: string | null
@@ -12,7 +13,7 @@ export function AvatarUpload({ preview, existing, onChange }: AvatarUploadProps)
       <div className="relative group">
         <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-background shadow-xl bg-muted flex items-center justify-center ring-2 ring-border/20">
           {preview || existing ? (
-            <img 
+            <Image
               src={preview || existing || ""} 
               alt="Avatar" 
               className="h-full w-full object-cover transition-transform group-hover:scale-105" 

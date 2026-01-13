@@ -9,6 +9,7 @@ import ProfileOverView from "./__components/ProfileOverView";
 import Menu from "./__components/Menu";
 import { getLoggedInUser, verifiedUserData } from "@/lib/action/user";
 import { getUserBook } from "@/lib/action/book";
+import Image from "next/image";
 
 
 
@@ -38,7 +39,9 @@ const Profile = async () => {
             <div className="relative">
               <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                 {profile?.profile_pic ? (
-                  <img
+                  <Image
+                    height={80}
+                    width={80}
                     src={profile.profile_pic}
                     alt="Avatar"
                     className="h-full w-full object-cover"
