@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getLoggedInUser } from "@/lib/action/user"; // Ensure this path matches your file structure
-import { User } from "@/db/schema"; // Ensure this import matches your schema location
+import { User } from "@/db/Schemas/user";
 
 export function useCurrentUser() {
   const [user, setUser] = useState<User | null>(null);

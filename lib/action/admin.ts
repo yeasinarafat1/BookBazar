@@ -24,7 +24,7 @@ export async function checkIsAdmin() {
       .from(usersTable)
       .where(eq(usersTable.clerkId, user.id))
       .limit(1);
-console.log("DB User Role Check:", dbUser);
+
     // 3. Check the role
     if (dbUser.length > 0 && dbUser[0].role === 'admin') {
       return { isAdmin: true };
@@ -63,7 +63,7 @@ export const getAllUsers = async (query?: string) => {
   }
 };
 
-export const changeUserRole = async (userId: string, newRole: string) => {
+export const changeUserRole = async (userId: string, newRole: "user" | "admin") => {
   try {
     await db
       .update(usersTable)

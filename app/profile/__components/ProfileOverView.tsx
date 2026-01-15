@@ -15,7 +15,7 @@ import { Book } from "@/db/Schemas/book";
 const ProfileOverView = ({userListedBook}:{
   userListedBook?:Book[];
 }) => {
-  console.log(userListedBook);
+  
   const [activeTab, setActiveTab] = useState<TabType>('listings');
 
 
