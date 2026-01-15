@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { SignOutButton } from '@clerk/nextjs';
 
 const menuItems = [
-  { icon: Edit, label: 'Edit Profile', href: '/profile/verify' },
-  { icon: MessageCircle, label: 'My Messages', href: '/messages', badge: '3' },
+
   { icon: Shield, label: 'Verify Account', href: '/profile/verify' },
   { icon: Settings, label: 'Settings', href: '/settings' },
   { icon: LogOut, label: 'Log Out', href: '/auth', destructive: true },
@@ -57,11 +56,7 @@ const Menu = () => {
           {/* These are passed as 'children' to Render */}
           <item.icon className="h-5 w-5" />
           <span className="flex-1 font-medium">{item.label}</span>
-          {item.badge && (
-            <Badge variant="default" className="h-5 min-w-5 justify-center">
-              {item.badge}
-            </Badge>
-          )}
+         
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Render>
       ))}

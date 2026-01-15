@@ -1,8 +1,9 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
-import { usersTable } from '@/db/schema'; // Make sure this points to your schema file
+import { usersTable } from '@/db/schema';
 import { db } from '@/db/drizzle';
+import { eq } from 'drizzle-orm'; // <--- Added this import
 
 export async function POST(req: Request) {
   // 1. Get the Secret from env
@@ -51,23 +52,21 @@ export async function POST(req: Request) {
   // 6. Handle the event
   const eventType = evt.type;
 
+  // --- HANDLER: User Created ---
   if (eventType === 'user.created') {
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
     const email = email_addresses[0]?.email_address;
     const name = `${first_name || ''} ${last_name || ''}`.trim();
 
-    // Prepare data for Drizzle
-    // We don't need to pass 'id' (database generates it) or 'createdAt'.
-    // We use default values for 'role' and 'verification_status' defined in schema.
     try {
       await db.insert(usersTable).values({
         clerkId: id,
         email: email,
-        name: name || 'Anonymous', // Fallback if name is empty
+        name: name || 'Anonymous',
         profile_pic: image_url,
-        role: 'user', // Explicitly setting it as text
-        verification_status: 'unverified' // Explicitly setting it as text
+        role: 'user',
+        verification_status: 'unverified'
       });
       
       console.log(`User ${id} created in DB`);
@@ -77,5 +76,31 @@ export async function POST(req: Request) {
     }
   }
 
+  // --- HANDLER: User Updated (New) ---
+if (eventType === 'user.updated') {
+    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+
+    // The payload shows 'email_addresses' is an array. We grab the first one.
+    const email = email_addresses[0]?.email_address;
+    
+    // Combine names safely. If both are null, it defaults to empty string.
+    const name = `${first_name || ''} ${last_name || ''}`.trim();
+
+    try {
+      await db.update(usersTable)
+        .set({
+            // Only update fields that might have changed
+            email: email,
+            name: name || 'Anonymous', // Fallback if name ends up empty
+            profile_pic: image_url,
+        })
+        .where(eq(usersTable.clerkId, id));
+      
+      console.log(`User ${id} updated in DB`);
+    } catch (error) {
+      console.error('Error updating user in DB:', error);
+      return new Response('Error updating user', { status: 500 });
+    }
+  }
   return new Response('', { status: 200 });
 }
