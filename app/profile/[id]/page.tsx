@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { User, Star, Calendar, BookOpen, Package, Shield } from "lucide-react";
 
 
-import ProfileOverView from "./__components/ProfileOverView";
-import Menu from "./__components/Menu";
+import ProfileOverView from "../__components/ProfileOverView";
+import Menu from "../__components/Menu";
 import { getLoggedInUser, verifiedUserData } from "@/lib/action/user";
 import { getUserBook } from "@/lib/action/book";
 import Image from "next/image";

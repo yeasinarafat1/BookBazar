@@ -24,7 +24,7 @@ export  function Header() {
     { href: '/browse', label: 'Browse', icon: Search },
     { href: '/sell', label: 'Sell', icon: PlusCircle },
     { href: '/messages', label: 'Messages', icon: MessageCircle },
-    { href: '/profile', label: 'Profile', icon: User },
+    { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
   ];
 
   const handleSignOut = () => {

@@ -1,9 +1,9 @@
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
-import { WebhookEvent } from '@clerk/nextjs/server';
+import { WebhookEvent, UserJSON } from '@clerk/nextjs/server'; // Added UserJSON
 import { usersTable } from '@/db/Schemas/user';
 import { db } from '@/db/drizzle';
-import { eq } from 'drizzle-orm'; // <--- Added this import
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   // 1. Get the Secret from env
@@ -54,7 +54,8 @@ export async function POST(req: Request) {
 
   // --- HANDLER: User Created ---
   if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+    // Cast data to UserJSON so TypeScript knows 'username' exists
+    const { id, email_addresses, username, first_name, last_name, image_url } = evt.data as UserJSON;
 
     const email = email_addresses[0]?.email_address;
     const name = `${first_name || ''} ${last_name || ''}`.trim();
@@ -63,6 +64,7 @@ export async function POST(req: Request) {
       await db.insert(usersTable).values({
         clerkId: id,
         email: email,
+        username: username || null, // Saves null if user has no username
         name: name || 'Anonymous',
         profile_pic: image_url,
         role: 'user',
@@ -76,22 +78,19 @@ export async function POST(req: Request) {
     }
   }
 
-  // --- HANDLER: User Updated (New) ---
-if (eventType === 'user.updated') {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+  // --- HANDLER: User Updated ---
+  if (eventType === 'user.updated') {
+    const { id, email_addresses, username, first_name, last_name, image_url } = evt.data as UserJSON;
 
-    // The payload shows 'email_addresses' is an array. We grab the first one.
     const email = email_addresses[0]?.email_address;
-    
-    // Combine names safely. If both are null, it defaults to empty string.
     const name = `${first_name || ''} ${last_name || ''}`.trim();
 
     try {
       await db.update(usersTable)
         .set({
-            // Only update fields that might have changed
             email: email,
-            name: name || 'Anonymous', // Fallback if name ends up empty
+            username: username || null, // Updates username or sets to null
+            name: name || 'Anonymous',
             profile_pic: image_url,
         })
         .where(eq(usersTable.clerkId, id));
@@ -102,5 +101,6 @@ if (eventType === 'user.updated') {
       return new Response('Error updating user', { status: 500 });
     }
   }
+
   return new Response('', { status: 200 });
 }

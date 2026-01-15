@@ -5,8 +5,8 @@ import "./globals.css";
 import { Header } from "@/components/Headers";
 import { BottomNav } from "@/components/BottomNav";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ToastProvider } from "@radix-ui/react-toast";
 import { Toaster } from "@/components/ui/toaster";
+import ScrollToTop from "@/components/ScrollTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +41,9 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+          {/* 2. Add the component right here inside body */}
+          <ScrollToTop />
+          
           <div className="relative flex min-h-screen flex-col">
             <Header />
             <main className="flex-1 pb-16 md:pb-0">
@@ -48,9 +51,11 @@ export default function RootLayout({
             </main>
             <BottomNav />
           </div>
+          
+          {/* 3. Moved Toaster inside body (it was outside html before) */}
+          <Toaster />
         </body>
       </html>
-      <Toaster />
     </ClerkProvider>
   );
 }
