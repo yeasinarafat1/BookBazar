@@ -66,7 +66,7 @@ export default async function BookPage({ params }: BookPageProps) {
   }
   // 3. Pass data to Client Component
   return <main className="pb-24 md:pb-8">
-    <ImageSlider images={book.images} />
+    <ImageSlider images={book.images} bookId={book.id}/>
     <div className="container px-4 py-6">
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Main Content */}

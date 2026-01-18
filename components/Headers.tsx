@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, PlusCircle, User, Home, Menu, X, BookOpen, LogIn, Shield, LogOut, MessageCircle } from 'lucide-react';
+import { Search, PlusCircle, User, Home, Menu, X, BookOpen, LogIn, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -23,7 +23,6 @@ export  function Header() {
     { href: '/', label: 'Home', icon: Home },
     { href: '/browse', label: 'Browse', icon: Search },
     { href: '/sell', label: 'Sell', icon: PlusCircle },
-    { href: '/messages', label: 'Messages', icon: MessageCircle },
     { href: `/profile/${user?.username}`, label: 'Profile', icon: User },
   ];
 

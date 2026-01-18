@@ -8,7 +8,7 @@ export const profile_verification_status = pgEnum('profile_verification_status',
 
 export const usersTable = pgTable('users_table', {
   id: uuid("id").primaryKey().defaultRandom(),
-  clerkId: varchar("clerkId", { length: 255 }).notNull(),
+  clerkId: varchar("clerkId", { length: 255 }).unique().notNull(),
   
   // CHANGED: Enum -> Text
   role: roles_enum('role').notNull().default('user'), 

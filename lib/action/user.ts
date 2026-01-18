@@ -54,3 +54,24 @@ export const verifiedUserData = async (clerk_id: string, isVerified: boolean) =>
   // Cleaner return logic
   return userData.length > 0 ? userData[0] : null;
 };
+export const getUserByUsername = async ( username:string)=>{
+  try{ 
+const dbUser = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username))
+      .limit(1);
+
+    // 3. Return the result
+    if (dbUser.length > 0) {
+      return { isAuthenticated: true, user: dbUser[0] };
+    } else {
+      // User is logged in to Clerk, but record is missing in DB (Rare edge case)
+      return { isAuthenticated: true, user: null };
+    }
+
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    return { isAuthenticated: false, user: null, error: "Database error" };
+  }
+}

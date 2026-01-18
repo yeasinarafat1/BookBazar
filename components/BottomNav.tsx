@@ -2,19 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react';
+import { Home, Search, PlusCircle, MessageCircle, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { User} from '@/db/Schemas/user';
+import { useCurrentUser } from '@/lib/hook/user';
 
-const navItems = [
+
+
+export  function BottomNav() {
+  const pathname = usePathname();
+  const { user } = useCurrentUser();
+  const navItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/browse', label: 'Browse', icon: Search },
   { href: '/sell', label: 'Sell', icon: PlusCircle },
   { href: '/messages', label: 'Messages', icon: MessageCircle },
-  { href: '/profile', label: 'Profile', icon: User },
+  { href: `/profile/${user?.username}`, label: 'Profile', icon: UserIcon },
 ];
-
-export function BottomNav() {
-  const pathname = usePathname();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/80 backdrop-blur-xl md:hidden">

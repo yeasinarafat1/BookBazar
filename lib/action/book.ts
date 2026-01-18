@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteImage, uploadImage } from "./upload";
-import { booksTable } from "@/db/schema";
+import { booksTable, savedTable } from "@/db/schema";
 import { db } from "@/db/drizzle";
 import { currentUser } from "@clerk/nextjs/server";
 import { and, desc, eq, gte, ilike, lte, or, SQL } from "drizzle-orm";
@@ -287,3 +287,5 @@ export const getRecentBooks = async (limit: number = 4) => {
     throw new Error("Failed to fetch recent books");
   }
 };
+
+
