@@ -10,10 +10,14 @@ import { and, desc, eq, gte, ilike, lte, or, SQL } from "drizzle-orm";
 import { getPublicIdFromUrl } from "../utils";
 import { getLoggedInUser } from "./user";
 import { BookFilters } from "@/types";
+import slugify from "slugify";
+import { nanoid } from "nanoid";
 
 export async function createListing(formData: FormData) {
   // 1. Authenticate User
   const {user} = await getLoggedInUser();
+  const slugRaw = slugify(formData.get("title") as string, { lower: true, strict: true });
+const uniqueSlug = `${slugRaw}-${nanoid(8)}`;
   
   if (!user) {
     throw new Error("You must be logged in to sell a book.");
@@ -61,6 +65,7 @@ export async function createListing(formData: FormData) {
     // 4. Insert into Database
     await db.insert(booksTable).values({
       sellerId: user.id, 
+      slug: uniqueSlug,
       sellerName: user.name || "Unknown Seller",
       sellerWhatsapp: whatsapp,
       sellerPhone: phone || null,
@@ -134,6 +139,19 @@ export const getBookById = async (bookId: string) => {
       .select()
       .from(booksTable)
       .where(eq(booksTable.id, bookId));
+      
+    return book[0] || null;
+  } catch (error) {
+    // If the query fails (e.g., invalid ID format), we treat it as "not found"
+    return null; 
+  }
+};
+export const getBookBySlug = async (slug: string) => {
+  try {
+    const book = await db
+      .select()
+      .from(booksTable)
+      .where(eq(booksTable.slug, slug));
       
     return book[0] || null;
   } catch (error) {

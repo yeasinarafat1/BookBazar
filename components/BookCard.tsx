@@ -43,7 +43,7 @@ export function BookCard({ book, className }: BookCardProps) {
 
   return (
     <Link
-      href={`/book/${book.id}`}
+      href={`/book/${book.slug}`}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-border/50",
         "shadow-card transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1",

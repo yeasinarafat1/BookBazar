@@ -199,15 +199,21 @@ const SellPage = () => {
                   key={index}
                   className="relative aspect-square rounded-xl overflow-hidden bg-muted"
                 >
-                  <Image src={img} alt="Preview" className="h-full w-full object-cover" />
+                  {/* FIX: Added fill and removed h-full w-full */}
+                  <Image 
+                    src={img} 
+                    alt="Preview" 
+                    fill 
+                    className="object-cover" 
+                  />
                   <button
                     onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 h-6 w-6 rounded-full bg-foreground/80 text-background flex items-center justify-center hover:bg-foreground transition-colors"
+                    className="absolute top-2 right-2 h-6 w-6 rounded-full bg-foreground/80 text-background flex items-center justify-center hover:bg-foreground transition-colors z-10"
                   >
                     <X className="h-4 w-4" />
                   </button>
                   {index === 0 && (
-                    <div className="absolute bottom-2 left-2">
+                    <div className="absolute bottom-2 left-2 z-10">
                       <Badge variant="secondary" className="text-[10px]">Cover</Badge>
                     </div>
                   )}
@@ -482,7 +488,7 @@ const SellPage = () => {
               <p className="text-sm font-medium text-foreground mb-3">Preview</p>
               <div className="flex gap-3">
                 {imagePreviews[0] && (
-                  <Image src={imagePreviews[0]} alt="Book Cover" className="h-20 w-16 rounded-lg object-cover" />
+                  <Image src={imagePreviews[0]} height={80} width={64} alt="Book Cover" className="h-20 w-16 rounded-lg object-cover" />
                 )}
                 <div>
                   <p className="font-semibold text-foreground">{formData.title || 'Book Title'}</p>

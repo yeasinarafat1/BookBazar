@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { mockBooks } from '@/data/mockBooks';
 
 import { Book } from '@/types';
-import { getBookById } from '@/lib/action/book';
+import { getBookById, getBookBySlug } from '@/lib/action/book';
 import ImageSlider from './components/ImageSlider';
 import SellerCard from './components/SellerCard';
 import SafetyTips from './components/SafetyTips';
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
 
 export default async function BookPage({ params }: BookPageProps) {
 
-  const book = await getBookById((await params).id);
+  const book = await getBookBySlug((await params).id);
 
   if (!book) {
    

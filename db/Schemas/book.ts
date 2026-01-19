@@ -2,7 +2,7 @@ import { pgTable,uuid,varchar,text,integer,boolean,timestamp, pgEnum } from "dri
 export const statusEnum=pgEnum('book_status_enum', ['pending', 'approved', 'rejected']);
 export const booksTable = pgTable('books_table', {
   id: uuid("id").primaryKey().defaultRandom(),
-  
+  slug: text('slug').unique().notNull(),
   // Link to the seller (assuming you use Clerk ID or User ID)
   sellerId: varchar("seller_id", { length: 255 }).notNull(), 
   sellerName:varchar("seller_name",{length:255}).notNull(),
