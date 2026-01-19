@@ -4,6 +4,7 @@ import { getVerifiedAndUnsoldBooks } from '@/lib/action/book';
 import { BookCategory, BookCondition } from '@/types';
 import { BookGrid } from './__component/BookGrid';
 import { SearchFilter } from './__component/SearchFilter';
+import { getSavedBookIds } from '@/lib/action/save';
 
 interface BrowsePageProps {
 
@@ -12,6 +13,7 @@ interface BrowsePageProps {
 
 export default async function BrowsePage({searchParams}: BrowsePageProps) {
   const params = await searchParams;
+  const savedBookIds = await getSavedBookIds();
    const currentFilters = {
      searchQuery: params.q || '',
      category: (params.category as BookCategory) || undefined,
@@ -46,6 +48,7 @@ export default async function BrowsePage({searchParams}: BrowsePageProps) {
               <BookGrid 
                 books={initialBooks}
                 emptyMessage="No books match your filters. Try adjusting your search criteria."
+                
               />
             </main>
           </div>

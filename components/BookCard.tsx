@@ -13,10 +13,12 @@ import { useCurrentUser } from '@/lib/hook/user';
 import { usePathname } from 'next/navigation'; // To get current path
 import { useToast } from '@/hooks/use-toast'; // Import Toast
 import { toggleSaveBook, checkIsBookSaved } from '@/lib/action/save'; // Import Actions
+import { LikeButton } from './LikeButton';
 
 interface BookCardProps {
   book: Book;
   className?: string;
+  isSaved?: boolean; // New prop to indicate if the book is saved
 }
 
 const conditionVariants: Record<BookCondition, 'new' | 'like-new' | 'good' | 'fair'> = {
@@ -27,64 +29,13 @@ const conditionVariants: Record<BookCondition, 'new' | 'like-new' | 'good' | 'fa
 };
 
 export function BookCard({ book, className }: BookCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const { user } = useCurrentUser();
-  const { toast } = useToast();
-  const pathname = usePathname();
+ 
 
-  // 1. Check if the book is already saved on mount
-  useEffect(() => {
-    const initSaveStatus = async () => {
-      if (user && book.id) {
-        const saved = await checkIsBookSaved(book.id);
-        setIsLiked(saved);
-      }
-    };
-    initSaveStatus();
-  }, [book.id, user]);
+
 
   // 2. Handle Save/Unsave Click
-  const handleToggleSave = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigating to the book page
-    e.stopPropagation();
-
-    if (!user) {
-      toast({ title: "Please sign in to save books", variant: "destructive" });
-      return;
-    }
-
-    // Optimistic UI Update (Switch immediately)
-    const previousState = isLiked;
-    setIsLiked(!previousState);
-
-    try {
-      // Call Server Action
-      const result = await toggleSaveBook(book.id, pathname);
-
-      if (result.success) {
-        toast({
-          title: result.isSaved ? "Book Saved" : "Removed from Saved",
-          description: result.message,
-        });
-        // Sync state with server response to be sure
-        setIsLiked(result.isSaved ?? !previousState);
-      } else {
-        // Revert on server error
-        setIsLiked(previousState);
-        toast({
-          title: "Error",
-          description: result.error || "Failed to save book",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      // Revert on network error
-      setIsLiked(previousState);
-      console.error(error);
-      toast({ title: "Something went wrong", variant: "destructive" });
-    }
-  };
+ 
 
   const discount = book.price 
     ? Math.round((1 - book.price / book.price) * 100) // Note: This logic seems to always return 0 in your original code
@@ -119,21 +70,21 @@ export function BookCard({ book, className }: BookCardProps) {
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Like Button */}
-        {user?.id != book.sellerId && (
-          <button
-            onClick={handleToggleSave}
-            className={cn(
-              "absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full",
-              "bg-card/90 backdrop-blur-sm shadow-sm transition-all duration-200",
-              "hover:scale-110 active:scale-95",
-              isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
-            )}
-          >
-            <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
-          </button>
-        )}
-        
+    <LikeButton
+    bookId={book.id}
+    sellerId={book.sellerId}
+    className={cn(
+      // Positioning
+      "absolute top-3 right-3",
+      // Container sizing & shape
+      "flex h-8 w-8 items-center justify-center rounded-full",
+      // Background & effects
+      "bg-card/90 backdrop-blur-sm shadow-sm",
+      // Interactions
+      "transition-all duration-200 hover:scale-110 active:scale-95"
+    )}
+    iconClassName="h-4 w-4"
+  />
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           <Badge variant={conditionVariants[book.condition as BookCondition]} className="font-bold">

@@ -10,6 +10,7 @@ interface BookGridProps {
 }
 
 export function BookGrid({ books, className, emptyMessage = "No books found" }: BookGridProps) {
+  
   if (books.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 animate-in fade-in zoom-in-95 duration-300">
@@ -39,7 +40,7 @@ export function BookGrid({ books, className, emptyMessage = "No books found" }: 
           className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <BookCard book={book} />
+          <BookCard book={book}  />
         </div>
       ))}
     </div>

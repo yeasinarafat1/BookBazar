@@ -105,3 +105,21 @@ export const getSavedBooks = async () => {
     return [];
   }
 };
+export const getSavedBookIds = async () => {
+  const { user } = await getLoggedInUser();
+  const userId = user?.id;
+  if (!userId) return [];
+
+  try {
+    const savedBooks = await db
+      .select({ bookId: savedTable.bookId })
+      .from(savedTable)
+      .where(eq(savedTable.userId, userId));
+
+    // Returns just the IDs: ['uuid-1', 'uuid-2']
+    return savedBooks.map((record) => record.bookId);
+  } catch (error) {
+    console.error("Error fetching saved book IDs:", error);
+    return [];
+  }
+};

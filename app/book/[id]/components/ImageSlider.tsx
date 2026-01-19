@@ -13,74 +13,33 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toggleSaveBook, checkIsBookSaved } from "@/lib/action/save";
 import { usePathname, useRouter } from "next/navigation";
+import { LikeButton } from "@/components/LikeButton";
 
 interface ImageSliderProps {
   images: string[];
-  bookId: string; // Required for Save/Share actions
+  bookId: string;
+  sellerId: string;
 }
 
-const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
+const ImageSlider = ({ images, bookId, sellerId }: ImageSliderProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
+
+
   const { toast } = useToast();
-  const pathname = usePathname();
   const router = useRouter();
 
   // 1. Check if book is already saved on mount
-  useEffect(() => {
-    const initSaveStatus = async () => {
-      if (bookId) {
-        const saved = await checkIsBookSaved(bookId);
-        setIsLiked(saved);
-      }
-    };
-    initSaveStatus();
-  }, [bookId]);
+
 
   // 2. Handle Save (Heart Click)
-  const handleSave = async () => {
-    if (isSaving) return; // Prevent double clicks
-    
-    // Optimistic Update
-    const previousState = isLiked;
-    setIsLiked(!previousState);
-    setIsSaving(true);
-
-    try {
-      const result = await toggleSaveBook(bookId, pathname);
-
-      if (result.success) {
-        toast({
-          title: result.isSaved ? "Added to Wishlist" : "Removed from Wishlist",
-          description: result.message,
-        });
-        setIsLiked(result.isSaved ?? !previousState);
-      } else {
-        // Revert on error
-        setIsLiked(previousState);
-        toast({
-          title: "Error",
-          description: result.error || "Please sign in to save books",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      setIsLiked(previousState);
-      toast({ title: "Something went wrong", variant: "destructive" });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+ 
   // 3. Handle Share (Copy Link)
   const handleShare = async () => {
     try {
       // Constructs the full URL (e.g., https://your-site.com/book/123)
       const url = `${window.location.origin}/book/${bookId}`;
       await navigator.clipboard.writeText(url);
-      
+
       toast({
         title: "Link Copied",
         description: "The book link has been copied to your clipboard.",
@@ -99,9 +58,8 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
       <div className="container px-0 md:px-4">
         {/* Changed to fixed height instead of aspect-ratio to prevent layout shifts */}
         <div className="relative w-full md:w-5/7 h-87.5 md:h-125 overflow-hidden rounded-none md:rounded-lg bg-gray-100 group">
-          
           {/* LAYER 1: Blurred Background Image (Fills the space) */}
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center blur-xl opacity-50 scale-110"
             style={{ backgroundImage: `url(${images[currentImageIndex]})` }}
           />
@@ -116,7 +74,7 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
           />
 
           {/* Back Button */}
-          <button 
+          <button
             onClick={() => router.back()}
             className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
           >
@@ -125,19 +83,14 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
 
           {/* Action Buttons */}
           <div className="absolute right-4 top-4 z-20 flex gap-2">
+            <LikeButton
+            key={bookId}
+              bookId={bookId}
+              sellerId={sellerId}
+              className="h-10 w-10" // Larger size for slider
+              iconClassName="h-5 w-5"
+            />
             <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:scale-110 disabled:opacity-70"
-            >
-              <Heart
-                className={cn(
-                  "h-5 w-5 transition-colors duration-300",
-                  isLiked ? "fill-red-500 text-red-500" : "text-gray-700"
-                )}
-              />
-            </button>
-            <button 
               onClick={handleShare}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:scale-110"
             >
@@ -158,7 +111,7 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
               <button
                 onClick={() =>
                   setCurrentImageIndex((i) =>
-                    Math.min(images.length - 1, i + 1)
+                    Math.min(images.length - 1, i + 1),
                   )
                 }
                 className="absolute right-4 top-1/2 z-20 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition-all hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
@@ -166,7 +119,7 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
               >
                 <ChevronRight className="h-5 w-5 text-gray-700" />
               </button>
-              
+
               {/* Dots */}
               <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 flex gap-2 p-2 rounded-full bg-black/20 backdrop-blur-md">
                 {images.map((_, i) => (
@@ -177,7 +130,7 @@ const ImageSlider = ({ images, bookId }: ImageSliderProps) => {
                       "h-2 rounded-full transition-all shadow-sm",
                       i === currentImageIndex
                         ? "bg-white w-6"
-                        : "bg-white/50 w-2 hover:bg-white/80"
+                        : "bg-white/50 w-2 hover:bg-white/80",
                     )}
                   />
                 ))}

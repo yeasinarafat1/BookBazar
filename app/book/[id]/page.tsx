@@ -9,6 +9,7 @@ import SellerCard from './components/SellerCard';
 import SafetyTips from './components/SafetyTips';
 import BookConditionDetails from './components/BookConditionDetails';
 import { Badge, Clock, Eye, MapPin } from 'lucide-react';
+import { getSavedBookIds } from '@/lib/action/save';
 
 interface BookPageProps {
  params: Promise<{
@@ -32,6 +33,7 @@ const conditionVariants = {
 // Optional: Generate SEO Metadata dynamically
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   const book = await getBookById((await params).id);
+  
   
 
   if (!book) {
@@ -66,7 +68,7 @@ export default async function BookPage({ params }: BookPageProps) {
   }
   // 3. Pass data to Client Component
   return <main className="pb-24 md:pb-8">
-    <ImageSlider images={book.images} bookId={book.id}/>
+    <ImageSlider images={book.images} bookId={book.id} sellerId={book.sellerId} />
     <div className="container px-4 py-6">
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Main Content */}

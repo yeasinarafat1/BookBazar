@@ -7,6 +7,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster";
 import ScrollToTop from "@/components/ScrollTop";
+import { SavedBooksProvider } from "@/components/providers/SavedBooksProvider";
+import { getSavedBookIds } from "@/lib/action/save";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +25,13 @@ export const metadata: Metadata = {
   description: "Find affordable textbooks from your seniors or sell your old books to juniors",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const savedBookIds = await getSavedBookIds();
+
   return (
     <ClerkProvider
       appearance={{
@@ -38,22 +42,25 @@ export default function RootLayout({
       }}
     >
       <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {/* 2. Add the component right here inside body */}
-          <ScrollToTop />
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 pb-16 md:pb-0">
-              {children}
-            </main>
-            <BottomNav />
-          </div>
-          
-          {/* 3. Moved Toaster inside body (it was outside html before) */}
-          <Toaster />
+          {/* 1. Provider moved INSIDE body */}
+          {/* 2. Fixed Prop Name: changed 'savedBookIds' to 'initialSavedIds' */}
+          <SavedBooksProvider initialSavedIds={savedBookIds}>
+            
+            <ScrollToTop />
+            
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1 pb-16 md:pb-0">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+            
+            <Toaster />
+            
+          </SavedBooksProvider>
         </body>
       </html>
     </ClerkProvider>
