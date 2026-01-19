@@ -29,23 +29,71 @@ const conditionVariants = {
   'good': 'outline',
   'fair': 'outline'
 };
-
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://book-bazar-phi.vercel.app/';
 // Optional: Generate SEO Metadata dynamically
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
-  const book = await getBookById((await params).id);
-  
-  
+  // Awaiting params (required in newer Next.js versions)
+  const resolvedParams = await params;
+  const book = await getBookBySlug(resolvedParams.id);
 
   if (!book) {
-    return { title: 'Book Not Found' };
+    return {
+      title: 'Book Not Found',
+      description: 'The requested book could not be found in our store.',
+    };
   }
 
+  // Create the image URL array for Social Media
+  // Ensure images are absolute URLs (start with https://)
+  const ogImages = book.images.map((img) => 
+    img.startsWith('http') ? img : `${baseUrl}${img}`
+  );
+
+  const pageTitle = `${book.title} by ${book.author} | Campus Bookstore`;
+  const pageDescription = `Buy "${book.title}" (${book.category}) for ৳${book.price}. Condition: ${book.condition}. Available now from ${book.sellerName}.`;
+
   return {
-    title: `${book.title} | Campus Bookstore`,
-    description: `Buy ${book.title} by ${book.author} for ৳${book.price}. Condition: ${book.condition}.`,
+    title: pageTitle,
+    description: pageDescription,
+    keywords: [book.title, book.author, book.category, 'used books', 'campus bookstore', 'buy books', book.condition],
+    authors: [{ name: book.author }],
+    
+    // Open Graph (Facebook, LinkedIn, WhatsApp, etc.)
+    openGraph: {
+      title: pageTitle,
+      description: pageDescription,
+      url: `${baseUrl}/books/${book.slug}`, // Canonical URL
+      siteName: 'Campus Bookstore',
+      locale: 'en_US',
+      type: 'website',
+      images: [
+        {
+          url: ogImages[0], // Primary image
+          width: 1200,
+          height: 630,
+          alt: `${book.title} cover image`,
+        },
+        ...ogImages.slice(1).map((img) => ({ url: img, alt: book.title })), // Additional images
+      ],
+    },
+
+    // Twitter Card (X, Twitter)
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: pageDescription,
+      images: ogImages, // Twitter usually picks the first one
+      creator: '@your_twitter_handle', // Optional
+    },
+    
+    // Optional: Add specific product metadata if supported
+    other: {
+      'product:price:amount': book.price.toString(),
+      'product:price:currency': 'BDT',
+      'product:condition': book.condition,
+    }
   };
 }
-
 export default async function BookPage({ params }: BookPageProps) {
 
   const book = await getBookBySlug((await params).id);
