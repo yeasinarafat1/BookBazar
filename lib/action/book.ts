@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteImage, uploadImage } from "./upload";
-import { booksTable, savedTable } from "@/db/schema";
+import { booksTable, savedTable, usersTable } from "@/db/schema";
 import { db } from "@/db/drizzle";
 import { currentUser } from "@clerk/nextjs/server";
-import { and, desc, eq, gte, ilike, lte, or, SQL } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, gte, ilike, lte, or, SQL } from "drizzle-orm";
 import { getPublicIdFromUrl } from "../utils";
 import { getLoggedInUser } from "./user";
 import { BookFilters } from "@/types";
@@ -148,14 +148,29 @@ export const getBookById = async (bookId: string) => {
 };
 export const getBookBySlug = async (slug: string) => {
   try {
-    const book = await db
-      .select()
+    const result = await db
+      .select({
+        // 2. Use getTableColumns() instead of spreading the table directly
+        ...getTableColumns(booksTable),
+        
+        // Your custom seller object
+        seller: {
+          id: usersTable.id,
+          name: usersTable.name,
+          username: usersTable.username,
+          email: usersTable.email,
+          whatsapp: booksTable.sellerWhatsapp,
+          profilePic: usersTable.profile_pic,
+          verificationStatus: usersTable.verification_status,
+        }
+      })
       .from(booksTable)
+      .leftJoin(usersTable, eq(booksTable.sellerId, usersTable.id))
       .where(eq(booksTable.slug, slug));
       
-    return book[0] || null;
+    return result[0] || null;
   } catch (error) {
-    // If the query fails (e.g., invalid ID format), we treat it as "not found"
+    console.error("Error fetching book:", error);
     return null; 
   }
 };
@@ -306,4 +321,30 @@ export const getRecentBooks = async (limit: number = 4) => {
   }
 };
 
+export const getSellerUnsoldBooks = async (sellerId: string) => {
+  try {
+    const books = await db
+      .select({
+        id: booksTable.id,
+        title: booksTable.title,
+        price: booksTable.price,
+        image: booksTable.images, // We need the first image for the thumbnail
+      })
+      .from(booksTable)
+      .where(
+        and(
+          eq(booksTable.sellerId, sellerId),
+          eq(booksTable.isSold, false),
+          eq(booksTable.status, "approved") // Only show approved books
+        )
+      );
 
+    return books.map(b => ({
+      ...b,
+      image: b.image[0] // Simplify to just one image
+    }));
+  } catch (error) {
+    console.error("Error fetching seller inventory:", error);
+    return [];
+  }
+};

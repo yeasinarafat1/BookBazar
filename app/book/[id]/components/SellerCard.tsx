@@ -1,14 +1,17 @@
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Phone, Star, User } from 'lucide-react'
+import Link from 'next/link'
 import React from 'react'
 
 const SellerCard = ({ 
-  SellerName, 
+  SellerName,
+  SellerUsername, 
   whatsapp, 
   contactNumber 
 }: { 
   SellerName: string, 
-  whatsapp: string, 
+  SellerUsername: string,
+  whatsapp: string,
   contactNumber: string 
 }) => {
 
@@ -34,9 +37,11 @@ const SellerCard = ({
         </div>
       </div>
 
-      <Button variant="outline" className="w-full mb-3 border-gray-300 hover:bg-gray-50">
+      <Link href={`/profile/${SellerUsername}`}>
+      <Button variant="outline" className="w-full mb-3 border-gray-300 hover:bg-gray-50 cursor-pointer">
         View Profile
       </Button>
+      </Link>
 
       <div className="space-y-2 mt-4">
         {/* WhatsApp Button */}
