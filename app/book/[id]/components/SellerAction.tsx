@@ -32,6 +32,7 @@ import { toast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import Image from "next/image";
 import { getSellerUnsoldBooks } from "@/lib/action/book";
+import { createContract } from "@/lib/action/contract"; // Import the real server action
 import { cn } from "@/lib/utils";
 
 interface SellerActionsProps {
@@ -62,12 +63,14 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // 1. Fetch Inventory when Dialog Opens
   useEffect(() => {
     if (open && inventory.length === 0) {
       setLoadingInventory(true);
       getSellerUnsoldBooks(sellerId)
         .then((data) => {
           setInventory(data);
+          // Ensure current book is selected by default
           if (!selectedIds.includes(bookId)) {
             setSelectedIds((prev) => [...prev, bookId]);
           }
@@ -76,40 +79,60 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
     }
   }, [open, sellerId, inventory.length, bookId, selectedIds]);
 
+  // 2. Calculate Total Price of Selected Items
   const calculatedTotal = useMemo(() => {
     return inventory
       .filter((b) => selectedIds.includes(b.id))
       .reduce((sum, b) => sum + b.price, 0);
   }, [inventory, selectedIds]);
 
-  const toggleBook = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
+  // 3. Sync Custom Price when entering Confirm step
   useEffect(() => {
     if (step === "confirm") {
       setCustomPrice(calculatedTotal.toString());
     }
   }, [step, calculatedTotal]);
 
-  const handleGenerate = () => {
+  // Toggle Selection
+  const toggleBook = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // 4. Generate Contract (Call Server Action)
+  const handleGenerate = async () => {
+    console.log("Generating contract for:", { sellerId, selectedIds, customPrice });
     const finalPrice = parseFloat(customPrice);
-    if (isNaN(finalPrice) || finalPrice <= 0) {
-      toast({ title: "Invalid Price", variant: "destructive" });
+    if (isNaN(finalPrice) || finalPrice < 0) {
+      toast({ title: "Invalid Price", description: "Price cannot be negative", variant: "destructive" });
       return;
     }
 
     setIsGenerating(true);
-    setTimeout(() => {
-      const idsParam = selectedIds.join(",");
-      const url = `${window.location.origin}/contract/checkout?books=${idsParam}&price=${finalPrice}`;
-      setContractUrl(url);
-      setStep("ready");
+
+    try {
+      // Call the Server Action
+      const result = await createContract(sellerId, selectedIds, finalPrice);
+
+      if (result.success && result.contractId) {
+        // Construct the checkout URL
+        const url = `${window.location.origin}/contract/checkout?contractId=${result.contractId}`;
+        setContractUrl(url);
+        setStep("ready");
+        toast({ title: "Contract Ready!", description: "Share the link with the buyer." });
+      } else {
+        toast({ 
+          title: "Error", 
+          description: result.message || "Failed to create contract", 
+          variant: "destructive" 
+        });
+      }
+    } catch (error) {
+      toast({ title: "System Error", description: "Something went wrong", variant: "destructive" });
+    } finally {
       setIsGenerating(false);
-      toast({ title: "Contract Ready!" });
-    }, 1500);
+    }
   };
 
   const handleCopy = () => {
@@ -130,6 +153,7 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+      {/* Header Info */}
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
           <Handshake className="h-5 w-5 text-emerald-600" />
@@ -140,6 +164,7 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
         </div>
       </div>
 
+      {/* Action Buttons */}
       <div className="grid grid-cols-2 gap-3">
         <Button variant="outline" className="w-full gap-2">
           <Edit className="h-4 w-4" /> Edit
@@ -168,13 +193,12 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
       {/* --- CREATE CONTRACT DIALOG --- */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
+          <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all hover:scale-[1.02]">
             <Handshake className="h-4 w-4" />
             Create Sale Contract
           </Button>
         </DialogTrigger>
 
-        {/* Made dialog wider (sm:max-w-lg) to accommodate the grid */}
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
@@ -190,7 +214,7 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
             </DialogDescription>
           </DialogHeader>
 
-          {/* --- STEP 1: SELECT BOOKS (Redesigned) --- */}
+          {/* --- STEP 1: SELECT BOOKS (New Grid Layout) --- */}
           {step === "select" && (
             <div className="py-2">
               {loadingInventory ? (
@@ -208,13 +232,13 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
                             key={item.id} 
                             onClick={() => toggleBook(item.id)}
                             className={cn(
-                              "relative flex items-center gap-4 p-3 rounded-xl border-2 transition-all cursor-pointer group",
+                              "relative flex items-center gap-4 p-3 rounded-xl border-2 transition-all cursor-pointer group select-none",
                               isSelected 
                                 ? "border-emerald-500 bg-emerald-50/50" 
                                 : "border-gray-100 hover:border-emerald-200 hover:bg-gray-50"
                             )}
                           >
-                            {/* Checkbox Visual */}
+                            {/* Custom Checkbox */}
                             <div className={cn(
                               "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0",
                               isSelected ? "border-emerald-500 bg-emerald-500" : "border-gray-300 bg-white"
@@ -222,12 +246,12 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
                               {isSelected && <Check className="h-3.5 w-3.5 text-white" />}
                             </div>
 
-                            {/* Image */}
+                            {/* Book Image */}
                             <div className="h-14 w-12 relative rounded-md overflow-hidden bg-gray-200 flex-shrink-0 border border-gray-100">
                                <Image src={item.image} alt={item.title} fill className="object-cover" />
                             </div>
 
-                            {/* Text Info */}
+                            {/* Book Details */}
                             <div className="flex-1 min-w-0">
                               <h4 className={cn(
                                 "text-sm font-semibold truncate transition-colors",
@@ -239,19 +263,13 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
                                 ৳{item.price}
                               </p>
                             </div>
-                            
-                            {/* Selected Badge (Optional flair) */}
-                            {isSelected && (
-                              <div className="absolute top-3 right-3">
-                                <span className="h-2 w-2 rounded-full bg-emerald-500 block animate-pulse"/>
-                              </div>
-                            )}
                           </div>
                         );
                       })}
                     </div>
                   </ScrollArea>
                   
+                  {/* Summary Footer */}
                   <div className="mt-4 pt-4 border-t flex justify-between items-center bg-gray-50/50 -mx-6 px-6 -mb-6 pb-6 rounded-b-lg">
                      <div>
                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Selected</span>
@@ -278,6 +296,7 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
           {/* --- STEP 2: CONFIRM PRICE --- */}
           {step === "confirm" && (
              <div className="space-y-6 py-4">
+               {/* Pricing Card */}
                <div className="bg-emerald-50/50 border border-emerald-100 p-4 rounded-xl space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Inventory Value ({selectedIds.length} items)</span>
@@ -291,7 +310,7 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
                         id="custom-price"
                         value={customPrice}
                         onChange={(e) => setCustomPrice(e.target.value)}
-                        className="pl-8 h-12 text-xl font-bold text-right border-emerald-200 focus-visible:ring-emerald-500"
+                        className="pl-8 h-12 text-xl font-bold text-right border-emerald-200 focus-visible:ring-emerald-500 bg-white"
                       />
                     </div>
                   </div>
@@ -304,7 +323,11 @@ export default function SellerActions({ bookId, sellerId, currentPrice }: Seller
 
                <div className="flex gap-3 pt-2">
                  <Button variant="outline" onClick={() => setStep("select")} className="h-12 px-6">Back</Button>
-                 <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-lg shadow-lg shadow-emerald-200" onClick={handleGenerate} disabled={isGenerating}>
+                 <Button 
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-12 text-lg shadow-lg shadow-emerald-200" 
+                    onClick={handleGenerate} 
+                    disabled={isGenerating}
+                 >
                     {isGenerating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Handshake className="h-5 w-5 mr-2" />}
                     Generate Contract
                  </Button>

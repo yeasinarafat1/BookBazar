@@ -25,6 +25,7 @@ export const booksTable = pgTable('books_table', {
   location: text('location').notNull(),
   description: text('description'),
   status: statusEnum('status').default('pending').notNull(),
+  buyerId: uuid("buyer_id").references(() => usersTable.id),
   isSold: boolean('is_sold').default(false).notNull(),
   isFeatured: boolean('is_featured').default(false).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

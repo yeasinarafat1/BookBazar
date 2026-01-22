@@ -8,7 +8,7 @@ import { User, Star, Calendar, BookOpen, Package, Shield } from "lucide-react";
 import ProfileOverView from "../__components/ProfileOverView";
 import Menu from "../__components/Menu";
 import { getLoggedInUser, getUserByUsername, verifiedUserData } from "@/lib/action/user";
-import { getUserBook } from "@/lib/action/book";
+import { getUserBook, getUserPurchasedBookIds } from "@/lib/action/book";
 import Image from "next/image";
 import { getUserAndVerfiedUserCount } from "@/lib/action/admin";
 import { getSavedBooks } from "@/lib/action/save";
@@ -28,7 +28,8 @@ const Profile = async ({params}:{
   const isOwnProfile= req.user?.username=== username;
   const userListedBooks = await getUserBook(profile?.id || "") || [];
   const savedBooks= await getSavedBooks();
-  
+  const purschedBooks=await getUserPurchasedBookIds(profile?.id || "");
+
   const isVerified =
     profile?.verification_status=== "verified";
   const displayName = profile?.name || "User";
@@ -144,7 +145,7 @@ const Profile = async ({params}:{
           </Link>
         </div>
 
-        <ProfileOverView userListedBook={userListedBooks} savedBooks={savedBooks} isOwnProfile={isOwnProfile}/>
+        <ProfileOverView userListedBook={userListedBooks} purchasedBooks={purschedBooks}  savedBooks={savedBooks} isOwnProfile={isOwnProfile}/>
         <Menu />
       </main>
     </div>

@@ -13,12 +13,14 @@ type TabType = 'listings' | 'sold' | 'purchased' | 'saved';
 
 interface ProfileOverviewProps {
   userListedBook?: Book[]; 
+  purchasedBooks?: Book[];
   savedBooks?: Book[];
   isOwnProfile: boolean;     
 }
 
 const ProfileOverView = ({ 
   userListedBook = [], 
+  purchasedBooks = [],
   savedBooks = [],
   isOwnProfile
 }: ProfileOverviewProps) => {
@@ -29,7 +31,7 @@ const ProfileOverView = ({
   // Filter Logic
   const userListings = userListedBook.filter((book) => !book.isSold);
   const soldBooks = userListedBook.filter((book) => book.isSold);
-  const purchasedBooks: Book[] = []; 
+ 
 
   // Base tabs
   const baseTabs = [

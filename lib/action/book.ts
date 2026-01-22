@@ -348,3 +348,24 @@ export const getSellerUnsoldBooks = async (sellerId: string) => {
     return [];
   }
 };
+
+export const getUserPurchasedBookIds = async (userId: string) => {
+  try {
+   const books = await db
+      .select()
+      .from(booksTable)
+      .where(
+        and(
+          eq(booksTable.buyerId, userId),
+          eq(booksTable.status, "approved")
+        )
+      )
+      .orderBy(desc(booksTable.createdAt))
+      
+    return books;
+  
+  } catch (error) {
+    console.error("Error fetching saved book IDs:", error);
+    return [];
+  }
+};
