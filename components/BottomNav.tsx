@@ -2,23 +2,35 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, PlusCircle, MessageCircle, User as UserIcon } from 'lucide-react';
+import { Home, Search, PlusCircle, User as UserIcon, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { User} from '@/db/Schemas/user';
 import { useCurrentUser } from '@/lib/hook/user';
+import { useState, useEffect } from 'react';
+import { getUnreadNotificationCount } from '@/lib/action/notification'; // 👈 Import action
 
-
-
-export  function BottomNav() {
+export function BottomNav() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
+  const [unreadCount, setUnreadCount] = useState(0); // 👈 State for count
+
+  // 👈 Fetch count on mount
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (user) {
+        const count = await getUnreadNotificationCount();
+        setUnreadCount(count);
+      }
+    };
+    fetchCount();
+  }, [user, pathname]); // Re-fetch on navigation
+
   const navItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/browse', label: 'Browse', icon: Search },
-  { href: '/sell', label: 'Sell', icon: PlusCircle },
-  { href: '/messages', label: 'Messages', icon: MessageCircle },
-  { href: `/profile/${user?.username}`, label: 'Profile', icon: UserIcon },
-];
+    { href: '/', label: 'Home', icon: Home },
+    { href: '/browse', label: 'Browse', icon: Search },
+    { href: '/sell', label: 'Sell', icon: PlusCircle },
+    { href: '/notification', label: 'Notification', icon: Bell }, // Ensure this href matches your page
+    { href: `/profile/${user?.username}`, label: 'Profile', icon: UserIcon },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/80 backdrop-blur-xl md:hidden">
@@ -58,10 +70,20 @@ export  function BottomNav() {
                       "h-5 w-5 transition-transform duration-300",
                       isActive && "scale-110"
                     )} />
+                    
+                    {/* Active Indicator Dot */}
                     {isActive && (
                       <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
                     )}
+
+                    {/* 🔴 Notification Badge */}
+                    {item.label === 'Notification' && unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 h-3.5 w-3.5 flex items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-background z-10">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </div>
+                  
                   <span className={cn(
                     "text-[10px] font-medium transition-all duration-300",
                     isActive ? "opacity-100" : "opacity-70"

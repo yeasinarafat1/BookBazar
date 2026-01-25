@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { deleteImage } from "./upload";
 import { get } from "http";
 import { getPublicIdFromUrl } from "../utils";
+import { createNotification } from "./notification";
 
 export async function checkIsAdmin() {
   try {
@@ -69,6 +70,13 @@ export const changeUserRole = async (userId: string, newRole: "user" | "admin") 
       .update(usersTable)
       .set({ role: newRole })
       .where(eq(usersTable.id, userId));
+    await createNotification({
+      userId: userId,
+      type: "system_alert",
+      title: "Role Updated",
+      message: `Your account role has been updated to '${newRole}'.`,
+    });
+    revalidatePath('/notification');
     revalidatePath('/admin/users'); // Revalidate the users page to reflect changes
   } catch (error) {
     console.error("Error changing user role:", error);
@@ -158,32 +166,72 @@ export const getAllVerificationRequests = async () => {
 
   }
 }
-export const updateVerificationRequestStatus=async (reqId:string, status:"pending"|"verified"|"rejected", adminNotes?:string)=>{
-  try{
-    if(status=="verified"){
-      // On verification, update the user's isVerified status
-      const request = await db
-        .select({ clerkId: profileVerificationRequestTable.clerkId })
-        .from(profileVerificationRequestTable)
-        .where(eq(profileVerificationRequestTable.id, reqId))
-        .limit(1);
-      if(request.length===0) throw new Error("Request not found");
-      const clerkId=request[0].clerkId;
-      const resUser= await db.update(usersTable)
+export const updateVerificationRequestStatus = async (
+  reqId: string, 
+  status: "pending" | "verified" | "rejected", 
+  adminNotes?: string
+) => {
+  try {
+    // 1. Fetch request to get clerkId
+    const request = await db
+      .select({ clerkId: profileVerificationRequestTable.clerkId })
+      .from(profileVerificationRequestTable)
+      .where(eq(profileVerificationRequestTable.id, reqId))
+      .limit(1);
+
+    if (request.length === 0) throw new Error("Request not found");
+    const clerkId = request[0].clerkId;
+
+    // 2. Fetch User UUID (Required for Notification Table)
+    const userResult = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.clerkId, clerkId))
+      .limit(1);
+    
+    const userUuid = userResult[0]?.id;
+
+    // 3. Perform Updates
+    if (status == "verified") {
+      const resUser = await db.update(usersTable)
         .set({ verification_status: status })
         .where(eq(usersTable.clerkId, clerkId));
-      if(!resUser) throw new Error("Failed to update user verification status");
+      if (!resUser) throw new Error("Failed to update user verification status");
     }
-   const res= await db.update(profileVerificationRequestTable)
-          .set({verificationStatus:status,admin_feedback:adminNotes})
-          .where(eq(profileVerificationRequestTable.id,reqId))
-    if(res) return true;
-    else throw new Error()
-  }catch(error){
+
+    const res = await db.update(profileVerificationRequestTable)
+      .set({ verificationStatus: status, admin_feedback: adminNotes })
+      .where(eq(profileVerificationRequestTable.id, reqId));
+
+    // 4. 🎉 Send Notification based on Status
+    if (res && userUuid) {
+      if (status === "verified") {
+        await createNotification({
+          userId: userUuid,
+          type: "verification_approved",
+          title: "Verification Approved! 🎉",
+          message: "Your student profile has been verified. You can now fully utilize the platform.",
+          link: "/profile",
+        });
+      } else if (status === "rejected") {
+        await createNotification({
+          userId: userUuid,
+          type: "verification_rejected",
+          title: "Verification Rejected",
+          message: `Your verification request was rejected.${adminNotes ? ` Reason: ${adminNotes}` : ' Please check your details and try again.'}`,
+          link: "/profile/verify", // Direct them to re-apply
+        });
+      }
+    }
+
+    if (res) return true;
+    else throw new Error();
+
+  } catch (error) {
     console.error("Error updating verification request status:", error);
     return false;
   }
-}
+};
 
 
 export const getUserAndVerfiedUserCount = async () => {

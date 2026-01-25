@@ -7,6 +7,7 @@ import { inArray, eq, getTableColumns } from "drizzle-orm";
 import { usersTable } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { getLoggedInUser } from "./user";
+import { createNotification } from "./notification";
 
 export const createContract = async (sellerId: string, bookIds: string[], price: number) => {
   try {
@@ -169,8 +170,27 @@ export const acceptContract = async (contractId: string) => {
         })
         .where(inArray(booksTable.id, contract.bookIds));
     }
+    
+    await createNotification({
+      userId: contract.sellerId, // Send to Seller
+      type: "contract_accepted",
+      title: "Order Confirmed! 💰",
+      message: `Great news! A buyer has purchased your bundle for ৳${contract.price}. Please check details to arrange handover.`,
+      link: `/contract/checkout?contractId=${contractId}`,
+      resourceId: contractId,
+    });
 
+    // Optional: Notify the Buyer as well (so they have a record in their inbox)
+    await createNotification({
+      userId: buyerId, // Send to Buyer
+      type: "contract_accepted",
+      title: "Purchase Successful! 📚",
+      message: `You successfully secured the bundle. Please contact the seller to pick up your books.`,
+      link: `/contract/checkout?contractId=${contractId}`,
+      resourceId: contractId,
+    });
     revalidatePath("/contract/checkout");
+    revalidatePath("/notifications");
     return { success: true, message: "Purchase successful!" };
 
   } catch (error: any) {

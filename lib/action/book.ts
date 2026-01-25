@@ -12,6 +12,7 @@ import { getLoggedInUser } from "./user";
 import { BookFilters } from "@/types";
 import slugify from "slugify";
 import { nanoid } from "nanoid";
+import { createNotification } from "./notification";
 
 export async function createListing(formData: FormData) {
   // 1. Authenticate User
@@ -105,16 +106,51 @@ export const getAllBooks = async () => {
 };
 export const updateBookStatus = async (bookId: string, newStatus: string) => {
   try {
+    // 1. Fetch the book FIRST to get the sellerId and title
+    const bookResult = await db
+      .select()
+      .from(booksTable)
+      .where(eq(booksTable.id, bookId))
+      .limit(1);
+
+    const book = bookResult[0];
+
+    if (!book) {
+      throw new Error("Book not found");
+    }
+
+    // 2. Update the status in Database
     await db
       .update(booksTable)
-      .set({ status: newStatus as any }) // 2. Type assertion to 'any' to bypass enum type issue
-      .where(eq(booksTable.id, bookId)); // 3. Correct usage: eq(column, value)
+      .set({ status: newStatus as any }) 
+      .where(eq(booksTable.id, bookId));
 
-    // 4. Refresh pages so the UI updates immediately
+    // 3. 🎉 Send Notification based on status
+    if (newStatus === 'approved') {
+      await createNotification({
+        userId: book.sellerId,
+        type: 'book_approved',
+        title: 'Book Approved! ✅',
+        message: `Your listing "${book.title}" has been approved and is now live.`,
+        link: `/book/${book.slug}`, // Link to the live book page
+        resourceId: book.id,
+      });
+    } else if (newStatus === 'rejected') {
+      await createNotification({
+        userId: book.sellerId,
+        type: 'book_rejected',
+        title: 'Book Rejected ❌',
+        message: `Your listing "${book.title}" was rejected. Please review our guidelines.`,
+        resourceId: book.id,
+      });
+    }
+
+    // 4. Refresh pages
     revalidatePath("/admin/books"); 
     revalidatePath("/browse");
     
     return { success: true };
+
   } catch (error) {
     console.error("Error updating book status:", error);
     throw new Error("Failed to update book status");
