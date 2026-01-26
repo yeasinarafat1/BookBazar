@@ -1,4 +1,4 @@
-import { pgTable, uuid, integer, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, uuid, integer, timestamp, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { usersTable } from "./user";
 
@@ -24,7 +24,7 @@ export const contractsTable = pgTable('contracts_table', {
   price: integer("price").notNull(),
 
   status: contractStatusEnum("status").default('pending').notNull(),
-  
+  isReviewed:boolean("is_reviewed").default(false).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
