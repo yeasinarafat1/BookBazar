@@ -347,7 +347,7 @@ export const getRecentBooks = async (limit: number = 4) => {
     const books = await db
       .select()
       .from(booksTable)
-      .where(eq(booksTable.status, "approved"))
+      .where(and(eq(booksTable.status, "approved"), eq(booksTable.isSold, false)))
       .orderBy(desc(booksTable.createdAt))
       .limit(limit);
     return books;

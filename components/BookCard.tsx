@@ -73,12 +73,7 @@ export function BookCard({ book, className }: BookCardProps) {
 
         {/* Badges Container */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {/* --- SOLD BADGE --- */}
-          {book.isSold && (
-            <Badge variant="destructive" className="font-bold uppercase tracking-wider border-white/50 border">
-              Sold
-            </Badge>
-          )}
+       
 
           {/* Regular Badges (Hide discount if sold to reduce clutter, or keep them) */}
           <Badge variant={conditionVariants[book.condition as BookCondition]} className="font-bold">

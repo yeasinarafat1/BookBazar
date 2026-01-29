@@ -3,7 +3,7 @@
 import { db } from "@/db/drizzle";
 import { contractsTable } from "@/db/Schemas/Contract";
 import { booksTable } from "@/db/Schemas/book";
-import { inArray, eq, getTableColumns } from "drizzle-orm";
+import { inArray, eq, getTableColumns, notInArray, and, arrayContains } from "drizzle-orm";
 import { usersTable } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { getLoggedInUser } from "./user";
@@ -166,6 +166,7 @@ export const acceptContract = async (contractId: string) => {
         .update(booksTable)
         .set({ 
             isSold: true,
+            isFeatured:false,
             buyerId: buyerId // 👈 Added this line to link the buyer to the specific books
         })
         .where(inArray(booksTable.id, contract.bookIds));
@@ -248,5 +249,47 @@ export const cancelContract = async (contractId: string) => {
   } catch (error) {
     console.error("Cancel error:", error);
     return { success: false, message: "Failed to cancel contract." };
+  }
+};
+
+export const checkActiveContract = async (bookId: string) => {
+  try {
+    // 1. Find a contract that contains this bookId in its array
+    const result = await db
+      .select({
+        id: contractsTable.id,
+        price: contractsTable.price,
+        status: contractsTable.status,
+      })
+      .from(contractsTable)
+      .where(
+        and(
+          // Check if the 'bookIds' array contains our specific bookId
+          arrayContains(contractsTable.bookIds, [bookId]),
+          
+          // Ensure the contract is NOT cancelled or completed (meaning it is active/pending)
+          notInArray(contractsTable.status, ['cancelled', 'completed'])
+        )
+      )
+      .limit(1);
+
+    const activeContract = result[0];
+
+    if (activeContract) {
+      return { 
+        exists: true, 
+        contract: {
+            id: activeContract.id,
+            price: activeContract.price,
+            status: activeContract.status
+        }
+      };
+    }
+
+    return { exists: false };
+
+  } catch (error) {
+    console.error("Error checking active contract:", error);
+    return { exists: false };
   }
 };
