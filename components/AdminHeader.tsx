@@ -61,6 +61,7 @@ export function AdminHeader() {
           <NavLink href="/admin/users" icon={Users} label="Users" />
           <NavLink href="/admin/books" icon={BookOpen} label="Books" />
           <NavLink href="/admin/verifications" icon={FileCheck} label="Verifications" />
+          <NavLink href="/admin/reports" icon={FileCheck} label="Reports" />
         </nav>
       </div>
     </header>
