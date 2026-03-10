@@ -13,9 +13,10 @@ const withPWA = require("next-pwa")({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  turbopack: {},
   experimental: {
     serverActions: {
-      bodySizeLimit: '4mb', // Increase this to your desired limit (e.g., '10mb')
+      bodySizeLimit: '4mb',
     },
   },
   typescript: {
