@@ -304,7 +304,7 @@ export default function ReportDetail() {
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm leading-relaxed mb-3 text-amber-900 dark:text-amber-100">{adminMsg.message}</p>
+                  <p className="text-sm leading-relaxed mb-3 text-amber-900 ">{adminMsg.message}</p>
 
                   {pairedReply ? (
                     <div className="rounded-xl bg-background border border-border p-3.5">

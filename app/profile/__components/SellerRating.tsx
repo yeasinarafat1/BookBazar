@@ -65,7 +65,7 @@ export default function SellerRatings({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
           {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/5 p-6 border-b border-border">
+          <div className="bg-linear-to-r from-primary/10 via-amber-500/10 to-primary/5 p-6 border-b border-border">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg">
                 <div className="p-2 rounded-full bg-amber-500/20">
@@ -119,7 +119,7 @@ export default function SellerRatings({
           </div>
           
           {/* Reviews List */}
-          <ScrollArea className="max-h-[350px]">
+          <ScrollArea className="max-h-87.5">
             <div className="p-4 space-y-3">
               {reviews.map((review, index) => (
                 <div 
@@ -132,7 +132,7 @@ export default function SellerRatings({
                   <div className="flex items-start gap-3">
                     <Avatar className="h-11 w-11 ring-2 ring-background shadow-sm">
                       <AvatarImage src={review.reviewerImage || undefined} />
-                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-amber-500/20 text-primary font-semibold">
+                      <AvatarFallback className="bg-linear-to-br from-primary/20 to-amber-500/20 text-primary font-semibold">
                         {review.reviewerName.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>

@@ -246,6 +246,7 @@ export const getAllReports = async () => {
     // 6. Map the fetched targets back to the reports
     const enrichedReports = reports.map((report) => {
       // Create base object
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const enriched: any = { ...report };
 
       // Attach users array if report type is user
@@ -329,12 +330,13 @@ export const sendAdminMessage = async (userId: string, reportId: string, message
 };
 
 // --- UPDATE REPORT STATUS & NOTES ---
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const updateReportStatus = async (userId: string, reportId: string, status: any, adminNotes: string) => {
   try {
     const { user } = await getLoggedInUser();
     if (!user) return { success: false, message: "Unauthorized" };
 
-    const report=await db
+    await db
       .update(reportsTable)
       .set({
         status,
@@ -430,6 +432,7 @@ export const getMyReports = async () => {
 
     // 6. Map everything together
     const enrichedReports = reports.map((report) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const enriched: any = { ...report };
 
       if (report.type === "user" && report.targetUserIds) {

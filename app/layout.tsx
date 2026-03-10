@@ -23,6 +23,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BookBazar - Buy & Sell Second-Hand Books",
   description: "Find affordable textbooks from your seniors or sell your old books to juniors",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BookBazar",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  themeColor: "#10b981",
 };
 
 export default async function RootLayout({
@@ -42,6 +52,10 @@ export default async function RootLayout({
       }}
     >
       <html lang="en" suppressHydrationWarning>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+          <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        </head>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           
           {/* 1. Provider moved INSIDE body */}

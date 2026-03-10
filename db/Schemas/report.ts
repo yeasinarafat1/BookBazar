@@ -83,6 +83,6 @@ export const reportMessagesRelations = relations(reportMessagesTable, ({ one }) 
 
 // Types
 export type InsertReport = typeof reportsTable.$inferInsert;
-export type SelectReport = typeof reportsTable.$inferSelect;
+export type ReportType = typeof reportsTable.$inferSelect;
 export type InsertReportMessage = typeof reportMessagesTable.$inferInsert;
 export type SelectReportMessage = typeof reportMessagesTable.$inferSelect;
