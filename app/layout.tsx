@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   description: "Find affordable textbooks from your seniors or sell your old books to juniors",
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
