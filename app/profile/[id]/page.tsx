@@ -17,7 +17,6 @@ import Menu from "../__components/Menu";
 import { getLoggedInUser, getUserByUsername, verifiedUserData } from "@/lib/action/user";
 import { getUserBook, getUserPurchasedBookIds } from "@/lib/action/book";
 import { getSavedBooks } from "@/lib/action/save";
-import { getAverageRating, getUserReviews } from "@/lib/action/review";
 import SellerRatings from "../__components/SellerRating";
 
 const Profile = async ({
@@ -49,15 +48,12 @@ const Profile = async ({
     userListedBooks,
     savedBooks,
     purchasedBooks,
-    ratingStats,
-    userReviews
+  
   ] = await Promise.all([
     verifiedUserData(profile.clerkId || "", profile.verification_status === "verified"),
     getUserBook(profile.id) || [],
     getSavedBooks(),
-    getUserPurchasedBookIds(profile.id),
-    getAverageRating(profile.id),
-    getUserReviews(profile.id)
+    getUserPurchasedBookIds(profile.id)
   ]);
 
   // 4. Data Transformation
@@ -70,16 +66,7 @@ const Profile = async ({
   // Assuming your book schema has isSold or status === 'sold'
   const soldBooksCount = userListedBooks.filter((book: any) => book.isSold).length;
 
-  // Map reviews to the format SellerRatings expects
-  const formattedReviews = userReviews.data.map((r) => ({
-    id: r.id,
-    reviewerName: r.reviewer.name || "Anonymous",
-    reviewerImage: r.reviewer.profilePic,
-    rating: r.rating,
-    comment: r.feedback,
-    createdAt: r.createdAt,
-    bookTitle: "Verified Purchase" // You can join books table later if needed
-  }));
+ 
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
@@ -159,9 +146,8 @@ const Profile = async ({
                   
                   {/* Reviews Trigger */}
                   <SellerRatings 
-                    averageRating={ratingStats.data.average}
-                    totalReviews={ratingStats.data.count}
-                    reviews={formattedReviews}
+                    
+                    userId={profile.id}
                   />
 
                   <div className="w-px h-8 bg-border" />

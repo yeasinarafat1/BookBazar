@@ -236,6 +236,7 @@ export default async function BookPage({ params }: BookPageProps) {
             ) : (
               // CASE 3: Book Available (And I am Buyer) -> Show Contact Card
               <SellerCard
+                sellerId={book.sellerId}
                 SellerUsername={book.seller.username || ""}
                 SellerName={book.seller.name || ""}
                 whatsapp={book.sellerWhatsapp}

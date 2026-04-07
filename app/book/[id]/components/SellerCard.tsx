@@ -1,14 +1,19 @@
-import { Button } from '@/components/ui/button'
-import { MessageCircle, Phone, Star, User } from 'lucide-react'
-import Link from 'next/link'
-import React from 'react'
+"use client"; // <-- Add this line at the top
+
+import SellerRatings from '@/app/profile/__components/SellerRating';
+import { Button } from '@/components/ui/button';
+import { MessageCircle, Phone, Star, User } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
 
 const SellerCard = ({ 
+  sellerId,
   SellerName,
   SellerUsername, 
   whatsapp, 
   contactNumber 
 }: { 
+  sellerId: string,
   SellerName: string, 
   SellerUsername: string,
   whatsapp: string,
@@ -23,24 +28,22 @@ const SellerCard = ({
       <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
         Seller
       </h3>
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-center gap-3 mb-6">
         <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
           <User className="h-7 w-7 text-emerald-600" />
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-gray-900 mb-1">{SellerName}</p>
-          <div className="flex items-center gap-1.5">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium text-gray-700">{4}</span>
-            <span className="text-sm text-gray-500">(24 reviews)</span>
-          </div>
+          <p className="font-semibold text-gray-900 ">{SellerName}</p>
+            {/* This now works because SellerCard is a Client Component */}
+            <SellerRatings userId={sellerId} minimal  />
+          
         </div>
       </div>
 
       <Link href={`/profile/${SellerUsername}`}>
-      <Button variant="outline" className="w-full mb-3 border-gray-300 hover:bg-gray-50 cursor-pointer">
-        View Profile
-      </Button>
+        <Button variant="outline" className="w-full mb-3 border-gray-300 hover:bg-gray-50 cursor-pointer">
+          View Profile
+        </Button>
       </Link>
 
       <div className="space-y-2 mt-4">
@@ -72,4 +75,4 @@ const SellerCard = ({
   )
 }
 
-export default SellerCard
+export default SellerCard;
