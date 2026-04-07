@@ -1,8 +1,6 @@
-"use client"; // <-- Add this line at the top
-
 import SellerRatings from '@/app/profile/__components/SellerRating';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Phone, Star, User } from 'lucide-react';
+import { MessageCircle, Phone, User } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react';
 

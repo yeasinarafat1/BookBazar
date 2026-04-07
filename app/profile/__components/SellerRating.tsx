@@ -32,47 +32,57 @@ interface SellerRatingsProps {
 export default function SellerRatings({ userId, minimal }: SellerRatingsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [averageRating, setAverageRating] = useState(0);
   const [totalReviews, setTotalReviews] = useState(0);
 
   useEffect(() => {
-    // Only fetch if the dialog is opened, or fetch immediately
-    // For this case, we'll fetch immediately to show the initial average rating
     const fetchRatingData = async () => {
       setIsLoading(true);
       try {
-        // Fetch rating stats and reviews in parallel
-        const [ratingStats, userReviews] = await Promise.all([
-          getAverageRating(userId),
-          getUserReviews(userId),
-        ]);
-
-        // Process and set state
+        const ratingStats = await getAverageRating(userId);
         setAverageRating(ratingStats?.data?.average || 0);
         setTotalReviews(ratingStats?.data?.count || 0);
-
-        const formattedReviews = userReviews.data.map((r: any) => ({
-          id: r.id,
-          reviewerName: r.reviewer.name || "Anonymous",
-          reviewerImage: r.reviewer.profilePic,
-          rating: r.rating,
-          comment: r.feedback,
-          createdAt: r.createdAt,
-          bookTitle: "Verified Purchase"
-        }));
-        setReviews(formattedReviews);
-
       } catch (error) {
-        console.error("Failed to fetch seller ratings:", error);
-        // Optionally set an error state here
+        console.error("Failed to fetch average rating:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRatingData();
-  }, [userId]); // Re-fetch if the userId changes
+  }, [userId]);
+
+  const fetchReviews = async () => {
+    if (reviews.length > 0 || isReviewsLoading) return; // Don't re-fetch if already loaded
+
+    setIsReviewsLoading(true);
+    try {
+      const userReviews = await getUserReviews(userId);
+      const formattedReviews = userReviews.data.map((r: any) => ({
+        id: r.id,
+        reviewerName: r.reviewer.name || "Anonymous",
+        reviewerImage: r.reviewer.profilePic,
+        rating: r.rating,
+        comment: r.feedback,
+        createdAt: r.createdAt,
+        bookTitle: "Verified Purchase"
+      }));
+      setReviews(formattedReviews);
+    } catch (error) {
+      console.error("Failed to fetch seller reviews:", error);
+    } finally {
+      setIsReviewsLoading(false);
+    }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      fetchReviews();
+    }
+  };
 
   // Helper to calculate percentage for the bars
   const getPercentage = (rating: number) => {
@@ -89,7 +99,7 @@ export default function SellerRatings({ userId, minimal }: SellerRatingsProps) {
     <>
       {/* --- Trigger Button (The Stats Box) --- */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => handleOpenChange(true)}
         className="hover:bg-muted/50 p-2 rounded-lg transition-colors cursor-pointer group w-[72px]"
       >
         {isLoading ? (
