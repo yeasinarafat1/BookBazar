@@ -1,16 +1,14 @@
 import { Book, BookCategory, BookCondition } from '@/types';
 
 const categories: BookCategory[] = [
-  'engineering',
+ 
   'computer-science',
   'electronics',
   'mechanical',
   'civil',
   'electrical',
-  'business',
-  'science',
-  'mathematics',
-  'language',
+  'power',
+  'non-technical',
 ];
 
 const conditions: BookCondition[] = ['new', 'like-new', 'good', 'fair'];
@@ -93,17 +91,15 @@ export const generateMockBooks = (count: number = 20): Book[] => {
 export const mockBooks = generateMockBooks(20);
 
 export const categoryLabels: Record<BookCategory, string> = {
-  'engineering': 'Engineering',
+  
   'computer-science': 'Computer Science',
   'electronics': 'Electronics',
   'mechanical': 'Mechanical',
   'civil': 'Civil',
   'electrical': 'Electrical',
-  'business': 'Business',
-  'science': 'Science',
-  'mathematics': 'Mathematics',
-  'language': 'Language',
-  'other': 'Other',
+  'power': 'Power',
+  'non-technical': 'Non-Technical',
+ 'other': 'Other',
 };
 
 export const conditionLabels: Record<BookCondition, string> = {

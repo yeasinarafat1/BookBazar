@@ -1,9 +1,6 @@
 import { getLoggedInUser } from "@/lib/action/user";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ShieldAlert, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+
 import SellBookForm from "./__components/SellBookForm";
 import VerificationRequiredCard from "./__components/VerificationRequiredCard";
 

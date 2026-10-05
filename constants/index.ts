@@ -2,11 +2,11 @@
 
 export const departments = [
   "Computer Science",
-  "Electrical Engineering",
-  "Mechanical Engineering",
-  "Civil Engineering",
+  "Electrical ",
+  "Mechanical ",
+  "Civil ",
   "Electronics",
-  "Architecture",
+  "Power",
   "Other"
 ]
 export const shifts = ["Morning", "Day", "Evening"]

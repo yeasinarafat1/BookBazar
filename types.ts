@@ -23,16 +23,13 @@ export interface ProfileVerificationProps {
 export type BookCondition = 'new' | 'like-new' | 'good' | 'fair';
 
 export type BookCategory = 
-  | 'engineering'
   | 'computer-science'
   | 'electronics'
   | 'mechanical'
   | 'civil'
   | 'electrical'
-  | 'business'
-  | 'science'
-  | 'mathematics'
-  | 'language'
+  | 'power'
+  | 'non-technical'
   | 'other';
 
 export interface Book {

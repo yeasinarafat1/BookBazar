@@ -6,37 +6,33 @@ import { BookCategory } from '@/types';
 import { categoryLabels } from '@/data/mockBooks';
 import { cn } from '@/lib/utils';
 const categoryIcons: Record<BookCategory, React.ElementType> = {
-  'engineering': Settings,
+ 
   'computer-science': Cpu,
   'electronics': Zap,
   'mechanical': Wrench,
   'civil': Building,
   'electrical': Zap,
-  'business': Briefcase,
-  'science': FlaskConical,
-  'mathematics': Calculator,
-  'language': Languages,
+  'power': Settings,
+  'non-technical': Briefcase,
   'other': BookOpen,
 };
 
 const categoryColors: Record<BookCategory, string> = {
-  'engineering': 'from-orange-500 to-red-500',
+  
   'computer-science': 'from-blue-500 to-indigo-500',
   'electronics': 'from-yellow-500 to-orange-500',
   'mechanical': 'from-gray-500 to-slate-600',
   'civil': 'from-green-500 to-emerald-600',
   'electrical': 'from-amber-500 to-yellow-500',
-  'business': 'from-purple-500 to-pink-500',
-  'science': 'from-teal-500 to-cyan-500',
-  'mathematics': 'from-indigo-500 to-purple-500',
-  'language': 'from-rose-500 to-pink-500',
+  'power': 'from-red-500 to-rose-600',
+  'non-technical': 'from-blue-500 to-indigo-500',
   'other': 'from-gray-500 to-gray-600',
 };
 
 const CatagorySection = () => {
     const mainCategories: BookCategory[] = [
     'computer-science', 'electronics', 'mechanical', 'civil',
-    'electrical', 'mathematics', 'science', 'business'
+    'electrical', 'power', 'non-technical', 'other'
   ];
   return (
      <section className="container py-8 mx-auto px-4">
@@ -62,7 +58,7 @@ const CatagorySection = () => {
           >
             <div className={cn(
               "flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl",
-              "bg-gradient-to-br shadow-lg transition-transform group-hover:scale-110",
+              "bg-linear-to-br shadow-lg transition-transform group-hover:scale-110",
               categoryColors[cat]
             )}>
               <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />

@@ -81,8 +81,8 @@ export function SearchFilter({ className }: SearchFilterProps) {
   ].filter(Boolean).length;
 
   const categories: BookCategory[] = [
-    'engineering', 'computer-science', 'electronics', 'mechanical',
-    'civil', 'electrical', 'mathematics', 'science', 'business', 'language'
+     'computer-science', 'electronics', 'mechanical',
+    'civil', 'electrical', 'power','non-technical'
   ];
   const conditions: BookCondition[] = ['new', 'like-new', 'good', 'fair'];
 
